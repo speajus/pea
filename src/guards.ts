@@ -1,0 +1,55 @@
+import { serviceSymbol } from "./symbols";
+import { Constructor, Fn } from "./types";
+
+export function isSymbol(x:unknown): x is symbol {
+    return typeof x === 'symbol';
+}
+
+
+export function isFn(x:unknown): x is Fn {
+    return typeof x === 'function';
+}
+export function isService(x:unknown): x is {[serviceSymbol]:symbol} {
+    return hasA(x, serviceSymbol, isSymbol);
+}
+export function isConstructor(x:Constructor | Fn): x is Constructor {
+    return !!x.prototype && !!x.prototype.constructor.name;
+
+    // const handler={construct(){return handler}} //Must return ANY object, so reuse one
+    // try{
+    //     return !!(new (new Proxy(x,handler))())
+    // }catch(e){
+    //     return false
+    // }
+// }
+
+//     // if (!!x.prototype && x.prototype.constructor === x){
+//     //     return false;
+//     // }
+//     try {
+//         return Reflect.construct(x, [], {}) instanceof x;
+//     }catch(e){
+//         return false;
+//     }
+
+}
+
+export function isObj(x:unknown): x is object {
+    switch(typeof x){
+        case 'object':
+        case 'function':
+            return x != null;
+        default:
+            return false;
+    }
+}
+
+export function has(x:unknown, k:PropertyKey): x is { [k in PropertyKey]:unknown } {
+    return isObj(x) && k in x;
+}
+
+export function hasA<V>(x:unknown, k:PropertyKey, guard:isA<V>): x is { [k in PropertyKey]:V } {
+    return has(x, k) ? guard(x[k]) : false;
+}
+
+export type isA<Out> = (v:unknown)=>v is Out;

@@ -1,0 +1,12 @@
+{
+  "name": "@spea/pea",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "vitest": "^2.1.5"
+  }
+}
