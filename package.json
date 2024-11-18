@@ -1,20 +1,21 @@
 {
   "name": "@spea/pea",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
+  "description": "A lightweight Dependency Injection (DI) framework for Node.js, based on proxies.",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "devDependencies": {
-    "typescript": "^5.6.3"
-  },
-  "dependencies": {
     "@types/node": "^22.9.0",
-    "async_hooks": "^1.0.0",
+    "typescript": "^5.6.3",
     "vitest": "^2.1.5"
   },
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
     "watch": "tsc -w",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "vite-tsconfig-paths": "^5.1.2"
   }
 }
