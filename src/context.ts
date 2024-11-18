@@ -2,8 +2,7 @@ import { newProxy } from "./newProxy";
 import { Registry } from "./registry";
 import { serviceSymbol } from "./symbols";
 import { has, hasA, isConstructor, isFn, isService, isSymbol } from "./guards";
-import { Constructor, CtxClass, CtxFn, CtxValue, Fn } from "./types";
-import { Service } from "./inject";
+import type { Service, Constructor, CtxClass, CtxFn, CtxValue, Fn } from "./types";
 
  type Ctx<T> = (CtxClass<T> | CtxFn<T> | CtxValue<T>) & { resolved: boolean };
 
@@ -82,7 +81,7 @@ class Context {
     const ctx = this.#map.get(key);
 
     const serv = isSymbol(service) ? _args[0] : service;
-    const args = has(ctx, 'args') ? ctx?.args : isSymbol(service) ? _args.slice(1) : _args;
+    const args = has(ctx, 'args') ? (ctx as any)?.args : isSymbol(service) ? _args.slice(1) : _args;
     if (ctx?.resolved){
         return ctx.instance;
     }
@@ -108,13 +107,13 @@ class Context {
             if (has(ctx, 'constructor')){
                 ctx.instance =  new ctx.constructor(...args as any);
               }else if (hasA(ctx, 'factory', isFn)){
-                ctx.instance = ctx.factory(...args as any);
+                (ctx as any).instance = (ctx as any).factory(...args as any);
             }
            ctx.resolved = true;
         }
         return ctx.instance;
     }else{
-        return this.register(key, serv, ...args)
+        return this.register(key as any, serv, ...args)
         .resolve(key as any);
 
      }

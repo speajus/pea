@@ -13,8 +13,8 @@ export class EmailService {
     static service = emailServiceSymbol;
     constructor(private authService = pea(authServiceSymbol), private dbService: IDBService = pea(DBService)) {}
 
-    sendEmail(to: string, subject: string, body: string) {
-        if (this.authService.isAuthenticated()){
+    async sendEmail(to: string, subject: string, body: string) {
+        if (await this.authService.isAuthenticated()){
             console.log('authenticated');
         }
         if (this.dbService.connection()){
