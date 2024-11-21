@@ -1,6 +1,7 @@
 
 import {it, describe, expect } from 'vitest';
 import { context as ctx, pea, serviceSymbol } from '@spea/pea';
+import { EmailService } from './sample-services/email';
 
 const aiSymbol =  Symbol('a');
 const abSymbol = Symbol('b');
@@ -48,5 +49,13 @@ describe('pea test', ()=>{
         const result = ctx.register(fn);
         expect(result.resolve(fn)).toBe('fn');
     });
+
+    it('should in inject the things', async ()=>{
+
+        const result = ctx.resolve(EmailService);
+        expect(result).toBeInstanceOf(EmailService);
+        expect(result.sendEmail("to", "what","go")).toBeInstanceOf(Promise);
+    })
+
 
 })

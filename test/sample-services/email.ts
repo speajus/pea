@@ -1,6 +1,6 @@
 import { authServiceSymbol,  } from "./auth";
 import { DBService, IDBService } from "./db";
-import { pea,  } from "@spea/pea";
+import { pea, serviceSymbol,  } from "@spea/pea";
 declare module "@spea/registry" {
 
  interface Registry {
@@ -10,7 +10,7 @@ declare module "@spea/registry" {
 export const emailServiceSymbol = Symbol("email-service-type");
 
 export class EmailService {
-    static service = emailServiceSymbol;
+    static [serviceSymbol] = emailServiceSymbol;
     constructor(private authService = pea(authServiceSymbol), private dbService: IDBService = pea(DBService)) {}
 
     async sendEmail(to: string, subject: string, body: string) {

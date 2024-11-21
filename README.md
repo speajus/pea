@@ -100,7 +100,7 @@ Injection supports different scopes for services. Here's an example of a request
 ```typescript
 import { scope, pea } from '@spea/pea';
 
-const [requestScope, withRequestScope] = scope();
+const [requestScope, withRequestScope] = ctx.scope();
 
 class RequestContext {
   userId: string;

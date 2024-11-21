@@ -1,5 +1,5 @@
 import { serviceSymbol } from "./symbols";
-import { Constructor, Fn } from "./types";
+import { Constructor, Fn, Primitive, PrimitiveType } from "./types";
 
 export function isSymbol(x:unknown): x is symbol {
     return typeof x === 'symbol';
@@ -53,3 +53,9 @@ export function hasA<V>(x:unknown, k:PropertyKey, guard:isA<V>): x is { [k in Pr
 }
 
 export type isA<Out> = (v:unknown)=>v is Out;
+export function isPrimitive(v:unknown):v is Primitive {
+    return typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' || typeof v === 'symbol' || typeof v === 'bigint';
+}
+export function isPrimitiveType(v:unknown): v is PrimitiveType {
+    return  v === String || v === Number || v === Boolean || v === Symbol || v === BigInt;
+}

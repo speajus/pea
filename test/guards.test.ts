@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isConstructor } from "../src/guards";
+import { isConstructor, isPrimitive, isPrimitiveType } from "../src/guards";
 
 
 describe('guards test', ()=>{
@@ -16,5 +16,34 @@ describe('guards test', ()=>{
     //     console.log(fn.prototype.constructor.name);
     //     expect(isConstructor(fn)).toBe(false);
     // })
+    it('should say be a primitive type', ()=>{
+        expect(isPrimitiveType(String)).toBe(true);
+        expect(isPrimitiveType(Number)).toBe(true);
+        expect(isPrimitiveType(Boolean)).toBe(true);
+        expect(isPrimitiveType(BigInt)).toBe(true);
+        expect(isPrimitiveType(Symbol)).toBe(true);
+        expect(isPrimitiveType("")).toBe(false);
+        expect(isPrimitiveType(1)).toBe(false);
+        expect(isPrimitiveType(true)).toBe(false);
+        expect(isPrimitiveType(BigInt(1))).toBe(false);
+        expect(isPrimitiveType(Symbol("test"))).toBe(false);
+        
+    });
+    it('should say be a primitive', ()=>{
+        expect(isPrimitive("")).toBe(true);
+        expect(isPrimitive(1)).toBe(true);
+        expect(isPrimitive(true)).toBe(true);
+        expect(isPrimitive(BigInt(1))).toBe(true);
+        expect(isPrimitive(Symbol("test"))).toBe(true);
+        expect(isPrimitive(String)).toBe(false);
+        expect(isPrimitive(Number)).toBe(false);
+        expect(isPrimitive(Boolean)).toBe(false);
+        expect(isPrimitive(BigInt)).toBe(false);
+        expect(isPrimitive(Symbol)).toBe(false);
+        expect(isPrimitive(class A {})).toBe(false);
+        expect(isPrimitive(()=>void 0)).toBe(false);     
+        expect(isPrimitive({})).toBe(false);     
+        
+    });
 
 })

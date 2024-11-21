@@ -1,7 +1,8 @@
 import { AsyncLocalStorage } from "async_hooks";
-import { type Class } from "./types";
+import type {  Fn, Constructor, Service } from "./types";
 import { newProxy } from "./newProxy";
-
+import  {context, ContextType } from './context';
+import { Registry } from "@spea/registry";
 /**
  * You can create your own 'scopes' this function.  This
  * will keep all the results in memory for the duration of the scope.
@@ -41,32 +42,27 @@ import { newProxy } from "./newProxy";
 
 export function scope(){
 const requestLocalStorage = new AsyncLocalStorage<
-  Map<Class, InstanceType<Class>>
+ ContextType
 >();
 
 const run = (fn: () => Promise<unknown>) => {
-  requestLocalStorage.run( new Map<Class, InstanceType<Class>>(), ()=>{
+  requestLocalStorage.run( context, ()=>{
     return fn();
   });
 };
 
-return [run, function withScope<T extends Class>(
-  Constructor: T,
-  ...args: ConstructorParameters<T>
-):  InstanceType<T> {
+// return [run, function withScope<T extends Constructor | Fn | Service | keyof Registry, Fn>(
+//   service: T,
+//   ...args: 
+// ){
 
-  return newProxy(()=> {
-    const store = requestLocalStorage.getStore();
-    if (!store) {
-      throw new Error(`must be called within a request`);
-    }
-    if (store.has(Constructor)) {
-      return store.get(Constructor)! as InstanceType<T>;
-    }
-    let instance = new Constructor(...args);
-    store.set(Constructor, instance);
-    return instance;
-  });
+//   return newProxy(()=> {
+//     const store = requestLocalStorage.getStore();
+//     if (!store) {
+//       throw new Error(`must be called within a request`);
+//     }
+//     return context.proxyObject(Constructor);
+//   });
 
-}];
-}
+// }];
+// }
