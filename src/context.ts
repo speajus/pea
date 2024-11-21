@@ -5,7 +5,6 @@ import { has, hasA, isConstructor, isFn, isPrimitive, isPrimitiveType, isService
 import type { Service, Constructor, CtxClass, CtxFn, CtxValue, ValueOf, Fn, Primitive, PrimitiveType, PrimitiveValue } from "./types";
 
 type Ctx<T> = (CtxClass<T> | CtxFn<T> | CtxValue<T>) & {
-    dependsOn: Set<MapKey>,
     resolved: boolean,
     primitive?: boolean,
     proxy?: ValueOf<T>
@@ -25,35 +24,19 @@ class Context {
     proxyObject<T extends keyof Registry>(service: T): ValueOf<T>;
     proxyObject<T extends PrimitiveType>(service: symbol, type: T): ValueOf<T>;
     proxyObject<T, K = never>(service: T, type?: K): ValueOf<T, K> {
-        const ctx = this.ctx(service as MapKey);
+        let ctx = this.ctx(service as MapKey);
 
-        const primitive = isPrimitiveType(type);
+        const primitive = ctx?.primitive ?? (isPrimitiveType(type) || isPrimitive(type));
 
-        if (ctx) {
-            if (ctx.proxy) {
-                return ctx.proxy;
-            }
-            if (primitive) {
-                ctx.primitive = true;
-                return (ctx.proxy = createPrimitiveProxy(type, () => {
-                    return this.resolve(service as any, type);
-                }));
-            }
-            return (ctx.proxy = newProxy(() => this.resolve(service as any)));
+        if (ctx.proxy) {
+            return ctx.proxy;
         }
-
-        const newCtx = {
-            primitive,
-            resolved: false,
-            proxy: primitive ?
-                createPrimitiveProxy(type, () => {
-                    return this.resolve(service as any, type);
-                }) : newProxy(() => {
-                    return this.resolve(service as any);
-                })
-        };
-        this.#map.set(service as MapKey, newCtx);
-        return newCtx.proxy;
+        if (primitive) {
+            ctx.primitive = true;
+            ctx.instance = type ?? ctx.instance;
+            return (ctx.proxy = createPrimitiveProxy(ctx)) as any;
+        }
+        return (ctx.proxy = newProxy(() => this.resolve(service as any)));
     }
 
     destroy(service: MapKey) {
@@ -66,7 +49,7 @@ class Context {
     register<T extends keyof Registry>(service: T, value: Registry[T]): this;
     register<T extends Constructor>(service: T, ...args: ConstructorParameters<T>): this;
     register<T extends Fn>(service: T, ...args: any[]): this;
-    register<T>(service: symbol, ..._args: any[]): this {
+    register<T>(service: MapKey, ..._args: any[]): this {
         let serv: Constructor | Fn | unknown;
         let key: MapKey = service;
         let args: any[] = _args;
@@ -76,7 +59,7 @@ class Context {
             primitive = true;
             instance = _args[0];
             args = [];
-            this.#map.set(key, { instance, primitive, resolved: true });
+            this.ctx(key, { instance, primitive, resolved: true });
             return this;
         }
         if (isService(service)) {
@@ -91,7 +74,7 @@ class Context {
             serv = service;
             key = service;
         }
-        let ctx: Ctx<any>;
+        let ctx: Ctx<any> = { resolved: false };
         if (isFn(serv)) {
             if (isConstructor(serv)) {
                 ctx = {
@@ -112,11 +95,21 @@ class Context {
                 resolved: true
             }
         }
-        this.#map.set(key, ctx);
+        this.ctx(key, ctx);
         return this;
     }
-    private ctx(key: MapKey | Service): Ctx<any> | undefined {
-        return this.#map.get(hasA(key, serviceSymbol, isSymbol) ? key[serviceSymbol] as MapKey : key as MapKey) ?? this.parent?.ctx(key);
+    private has(key: MapKey | Service): boolean {
+        return this.#map.has(keyOf(key)) ?? this.parent?.has(key) ?? false;
+    }
+    private ctx(key: MapKey | Service, defaults?: Ctx<any>): Ctx<any> {
+        let k = keyOf(key);
+        let ret = this.#map.get(k) ?? this.parent?.ctx(k);
+        if (!ret) {
+            this.#map.set(k, (ret = defaults ?? { resolved: false }));
+        } else if (defaults != null) {
+            Object.assign(ret, defaults);
+        }
+        return ret;
     }
     resolve<T extends Primitive>(key: symbol, value: T): T;
     resolve<T extends Constructor>(key: symbol, service: T, ...args: ConstructorParameters<T>): ValueOf<T>;
@@ -127,19 +120,26 @@ class Context {
     resolve<T extends Fn>(service: T, ...args: Parameters<T>): ValueOf<T>;
     resolve<T extends keyof Registry>(service: T): ValueOf<T>;
     resolve<T extends (Constructor & Service) | Fn | keyof Registry>(service: T, ..._args: any[]): ValueOf<T> {
-        const key: MapKey = isService(service) ? service[serviceSymbol] : service;
+        const key = keyOf(service);
+        if (!this.has(service)) {
+            this.register(service as any, ..._args);
+        }
         const ctx = this.ctx(key);
 
         const serv = isSymbol(service) ? _args[0] : service;
         const args = has(ctx, 'args') ? (ctx as any)?.args : isSymbol(service) ? _args.slice(1) : _args;
-        if (ctx?.resolved) {
-            return ctx.instance;
-        }
+
         if (serv) {
-            if (!ctx) {
-                return this.register(key as any, serv, ...args).resolve(key as any);
-            }
+
             if (ctx.resolved) {
+                if (ctx.primitive) {
+                    ctx.primitive = serv;
+                }
+                return ctx.instance;
+            }
+            if (ctx.primitive) {
+                ctx.resolved = true;
+                ctx.instance = serv;
                 return ctx.instance;
             }
             if (hasA(ctx, 'factory', isFn)) {
@@ -152,20 +152,17 @@ class Context {
                 return ctx.instance;
             }
             throw new Error(`service '${String(service)}' not registered`);
-        } else if (ctx) {
-            if (!ctx.resolved) {
-                if (hasA(ctx, 'constructor', isFn)) {
-                    ctx.instance = new (ctx.constructor)(...args);
-                } else if (hasA(ctx, 'factory', isFn)) {
-                    ctx.instance = ctx.factory(...args);
-                }
-                ctx.resolved = true;
-            }
-            return ctx.instance;
         }
 
-        return this.register(key as any, serv, ...args)
-            .resolve(key as any);
+        if (!ctx.resolved) {
+            if (hasA(ctx, 'constructor', isFn)) {
+                ctx.instance = new (ctx.constructor)(...args);
+            } else if (hasA(ctx, 'factory', isFn)) {
+                ctx.instance = ctx.factory(...args);
+            }
+            ctx.resolved = true;
+        }
+        return ctx.instance;
 
 
     }
@@ -190,3 +187,6 @@ export function pea<T extends Constructor | Fn | keyof Registry>(service: T, typ
     return context.proxyObject(service as any, type);
 };
 
+function keyOf(key: MapKey | Service) {
+    return hasA(key, serviceSymbol, isSymbol) ? key[serviceSymbol] as MapKey : key as MapKey;
+}
