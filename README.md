@@ -10,10 +10,20 @@ Injection is a simple yet powerful DI framework designed to make dependency mana
 
 ## Features
 
-- Lightweight and easy to use
-- Proxy-based lazy loading of dependencies
+- Lightweight and only 3 methods, `context.register`, `context.resolve` and `pea`.
+- Proxy-based lazy loading of dependencies 
 - Support for both class and function-based services
 - Flexible scoping options
+- No runtime dependencies
+- Type-safe and fully typed
+- Not based on decorators.
+- Constructor injection
+- Factory injection
+- Primitive injection
+
+## Dependencies and Requirements
+This has no runtime dependencies.  It also works with most modern JS runtimes.
+
 
 ## Installation
 
@@ -54,7 +64,7 @@ class UserService {
   }
 }
 
-const userService = new UserService();
+const userService = context.resolve(UserService);
 userService.getUsers(); // Outputs: Connected to database
 ```
 
@@ -91,6 +101,9 @@ class UserService {
     // ... fetch users
   }
 }
+...
+const userService = context.resolve(UserService);
+userService.getUsers(); // Outputs: Connected to database
 ```
 
 ### Scoped Services
@@ -127,10 +140,8 @@ class UserService {
 ## Roadmap
 
 - Improve documentation and add more examples
-- Add support for circular dependencies
-- Implement automatic dependency resolution
-- Add decorators for easier service registration
-- Improve type inference and type safety
+- Add lifecycle methods, 'destroy', 'create', 'intitialize'
+- Finish AsyncLocal work for scope.
 
 ## Contributing
 
