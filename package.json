@@ -6,6 +6,21 @@
   "type": "module",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jspears/spea"
+  },
+  "author": "John Spears",
+  "keywords": [
+    "dependency injection",
+    "di",
+    "injection",
+    "proxy",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "@types/node": "^22.9.0",
     "typescript": "^5.6.3",
