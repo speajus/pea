@@ -5,15 +5,18 @@ import { has, hasA, isConstructor, isFn, isPrimitive, isPrimitiveType, isService
 import type { Service, Constructor, CtxClass, CtxFn, CtxValue, ValueOf, Fn, Primitive, PrimitiveType, PrimitiveValue } from "./types";
 
 type Ctx<T> = (CtxClass<T> | CtxFn<T> | CtxValue<T>) & {
-    resolved: boolean,
-    primitive?: boolean,
-    proxy?: ValueOf<T>
+    resolved: boolean;
+    primitive?: boolean;
+    proxy?: ValueOf<T>;
+    dependencies?: Set<MapKey>;
 };
 
 export type ContextType = InstanceType<typeof Context>;
 
 type MapKey = symbol | Constructor | Fn | keyof Registry;
 class Context {
+    //this thing is used to keep track of dependencies. 
+    static #dependencies = new Set<MapKey>();
     #map = new Map<MapKey, Ctx<any>>();
     constructor(private readonly parent?: Context) {
     }
@@ -23,24 +26,56 @@ class Context {
     proxyObject<T extends Constructor>(service: T): ValueOf<T>;
     proxyObject<T extends keyof Registry>(service: T): ValueOf<T>;
     proxyObject<T extends PrimitiveType>(service: symbol, type: T): ValueOf<T>;
-    proxyObject<T, K = never>(service: T, type?: K): ValueOf<T, K> {
-        let ctx = this.ctx(service as MapKey);
+    proxyObject<T extends MapKey, K = never>(service: T, type?: K): ValueOf<T, K> {
+        const ctx = this.ctx(service as MapKey);
+        Context.#dependencies.add(service);
 
         const primitive = ctx?.primitive ?? (isPrimitiveType(type) || isPrimitive(type));
 
         if (ctx.proxy) {
             return ctx.proxy;
         }
+
         if (primitive) {
             ctx.primitive = true;
             ctx.instance = type ?? ctx.instance;
+            //TODO make this contextual to the current context... it'll get tricky
             return (ctx.proxy = createPrimitiveProxy(ctx)) as any;
         }
         return (ctx.proxy = newProxy(() => this.resolve(service as any)));
     }
 
-    destroy(service: MapKey) {
-        this.#map.delete(service);
+    /**
+     * Starting at a service, apply a function to all dependencies.  This is
+     * useful if you want to destroy all dependencies.   This also could be
+     * used for trigger init methods.  It will only visit each dependency once.
+     *  
+     * 
+     * ```
+     *   context.visit(EmailService, (v)=>{
+     *     v.destroy?.();
+     *     return undefined;
+     *   });
+     * 
+     * ```
+     * 
+     * @param service 
+     * @param fn 
+     */
+    visit(service: MapKey, fn: (value: unknown, mapKey: MapKey) => unknown) {
+        this._visit(service, fn);
+    }
+    private _visit(service: MapKey, fn: (value: unknown, mapKey: MapKey) => unknown, seen = new Set<MapKey>()) {
+        if (seen.size === seen.add(service).size) {
+            return;
+        }
+        const ctx = this.ctx(service);
+        if (ctx.dependencies) {
+            for (const dep of ctx.dependencies) {
+                this._visit(dep, fn, seen);
+            }
+        }
+        ctx.instance = fn(ctx.instance, service);
     }
 
     register<T extends Primitive>(service: symbol, value: T): this;
@@ -80,13 +115,13 @@ class Context {
                 ctx = {
                     constructor: serv,
                     resolved: false,
-                    args
+                    args,
                 };
             } else {
                 ctx = {
                     factory: serv,
                     resolved: false,
-                    args
+                    args,
                 }
             }
         } else {
@@ -144,10 +179,13 @@ class Context {
             }
             if (hasA(ctx, 'factory', isFn)) {
                 ctx.resolved = true;
-                return (ctx.instance = ctx.factory(...args));
+                ctx.dependencies = Context.#dependencies = new Set();
+                ctx.instance = ctx.factory(...args);
+                return ctx.instance;
             }
             if (hasA(ctx, 'constructor', isFn)) {
                 ctx.resolved = true;
+                ctx.dependencies = Context.#dependencies = new Set();
                 ctx.instance = new (ctx.constructor)(...args)
                 return ctx.instance;
             }

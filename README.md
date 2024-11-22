@@ -137,10 +137,53 @@ class UserService {
 }
 ```
 
+## API Reference
+### pea(service, type?)
+
+Returns a proxy for the given service.  If the service is a symbol, the type can be used to specify the type of the service.  Symbols should be registered with the context.  For example:
+
+```typescript
+const dbService = Symbol('DatabaseService');
+
+class DatabaseService {
+  connect() {
+    console.log('Connected to database');
+  }
+}
+declare module "@spea/registry" {
+    export interface Registry {
+        [dbService]: typeof DatabaseService;
+    }
+}
+
+context.register(dbService, DatabaseService);
+
+class UserService {
+  constructor(private db = pea(dbService)) {}
+
+  getUsers() {
+    this.db.connect();
+    // ... fetch users
+  }
+}
+```
+
+### context.register(service, ...args)
+
+Registers a service with the given arguments.
+
+### context.resolve(service, ...args)
+
+Resolves a service with the given arguments.
+
+### context.visit(service, fn)
+
+Visits all dependencies of a service. This can be used to destroy all dependencies, or something, else. The
+return of `fn` becomes the new value of the dependency. As primitives do not have dependencies, they do not get visited.   
+
 ## Roadmap
 
 - Improve documentation and add more examples
-- Add lifecycle methods, 'destroy', 'create', 'intitialize'
 - Finish AsyncLocal work for scope.
 
 ## Contributing

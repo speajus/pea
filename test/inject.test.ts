@@ -5,12 +5,17 @@ import { EmailService } from './sample-services/email';
 
 const aiSymbol = Symbol('a');
 const abSymbol = Symbol('b');
+const acSymbol = Symbol('c');
 class A {
     static readonly [serviceSymbol] = aiSymbol;
-    constructor(private readonly connectionUrl: string) {
+    constructor(readonly connectionUrl: string) {
     }
     connection() {
         return this.connectionUrl;
+    }
+}
+class C {
+    constructor(readonly a = pea(aiSymbol)) {
     }
 }
 type AI = InstanceType<typeof A>;
@@ -18,6 +23,7 @@ declare module "@spea/registry" {
     export interface Registry {
         [aiSymbol]: AI;
         [abSymbol]: string;
+        [acSymbol]: InstanceType<typeof C>;
     }
 }
 
@@ -84,5 +90,30 @@ describe('pea test', () => {
         expect(result.sendEmail("to", "what", "go")).toBeInstanceOf(Promise);
     })
 
+    it('should return the an instance and visit', () => {
+        class A { constructor() { } };
+        class B { constructor(readonly a = pea(A)) { } };
+        class C { constructor(readonly b = pea(B)) { } };
+
+
+        class D {
+            constructor(readonly a = pea(A), readonly b = pea(B), readonly c = pea(C)) { }
+        };
+
+        ctx.resolve(D);
+
+        const all = new Set();
+        ctx.visit(D, (_, key) => {
+            all.add(key);
+            return undefined;
+        });
+        expect(all.size).toBe(4);
+        expect(all.has(D)).toBe(true);
+        expect(all.has(A)).toBe(true);
+        expect(all.has(B)).toBe(true);
+        expect(all.has(C)).toBe(true);
+
+
+    });
 
 })

@@ -10,7 +10,8 @@
     "@types/node": "^22.9.0",
     "typescript": "^5.6.3",
     "vite-tsconfig-paths": "^5.1.2",
-    "vitest": "^2.1.5"
+    "vitest": "^2.1.5",
+    "@vitest/coverage-v8": "^2.1.5"
   },
   "scripts": {
     "test": "vitest run",
@@ -18,7 +19,5 @@
     "watch": "tsc -w",
     "clean": "rm -rf dist"
   },
-  "dependencies": {
-    "@vitest/coverage-v8": "^2.1.5"
-  }
+  "dependencies": {}
 }
