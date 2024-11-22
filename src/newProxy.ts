@@ -41,8 +41,8 @@ export function createPrimitiveProxy(ctx: CtxValue<Primitive>) {
       return Object.getPrototypeOf(ctx.instance);
     },
     get(target, prop) {
-      const prim = Reflect.get(target, 'instance');
-      const value = prim[prop];
+      const prim = Reflect.get(target, 'instance') as any;
+      const value = prim[prop as any];
       return typeof value === 'function' ? value.bind(prim) : value;
     },
     // set(target, prop, value) {

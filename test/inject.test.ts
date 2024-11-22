@@ -39,7 +39,7 @@ describe('pea test', () => {
             get(target, prop, receiver) {
                 console.log({ receiver, target, prop });
                 const prim = Reflect.get(target, 'value');
-                const value = prim[prop];
+                const value = prim[prop as any] as any;
                 return typeof value === 'function' ? value.bind(prim) : value;
             }
         });
