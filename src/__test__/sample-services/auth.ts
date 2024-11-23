@@ -22,7 +22,7 @@ export class AuthService implements IAuthService {
     }
 }
 
-declare module "@spea/registry" {
+declare module "@spea/pea" {
     export interface Registry {
         [authServiceSymbol]: InstanceType<typeof AuthService>;
     }

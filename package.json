@@ -30,7 +30,7 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsc --excludeFiles src/__test__/**/*",
+    "build": "tsc",
     "watch": "tsc -w",
     "clean": "rm -rf dist"
   },
