@@ -10,9 +10,6 @@
     "type": "git",
     "url": "https://github.com/jspears/spea"
   },
-  "files": [
-    "dist"
-  ],
   "author": "John Spears",
   "keywords": [
     "dependency injection",
