@@ -21,7 +21,7 @@ class C {
     }
 }
 type AI = InstanceType<typeof A>;
-declare module "@spea/registry" {
+declare module "@spea/pea" {
     export interface Registry {
         [aiSymbol]: AI;
         [abSymbol]: string;

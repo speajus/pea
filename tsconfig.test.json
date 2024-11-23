@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true,
+    "rootDirs": ["./src", "./test"],
+    "paths":{
+      "@spea/pea":["./src/index.ts"],
+      "@spea/pea/*":["./src/*"]
+    },
+  }
+  ,
+  "include": ["test", "src"]
+}

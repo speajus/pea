@@ -12,9 +12,7 @@ Injection is a simple yet powerful DI framework designed to make dependency mana
 
 - Lightweight and only 3 methods, `context.register`, `context.resolve` and `pea`.
 - Proxy-based lazy loading of dependencies 
-- Support for both class and function-based services
-- Flexible scoping options
-- No runtime dependencies
+- No dependencies
 - Type-safe and fully typed
 - Not based on decorators.
 - Constructor injection
@@ -106,37 +104,6 @@ const userService = context.resolve(UserService);
 userService.getUsers(); // Outputs: Connected to database
 ```
 
-### Scoped Services
-
-Injection supports different scopes for services. Here's an example of a request-scoped service:
-
-```typescript
-import { scope, pea } from '@spea/pea';
-
-const [requestScope, withRequestScope] = ctx.scope();
-
-class RequestContext {
-  userId: string;
-}
-
-const requestContextService = withRequestScope(RequestContext);
-
-app.use((req, res, next) => {
-  requestScope(() => {
-    requestContextService.userId = req.headers['user-id'];
-    next();
-  });
-});
-
-class UserService {
-  constructor(private context = pea(RequestContext)) {}
-
-  getCurrentUser() {
-    return this.context.userId;
-  }
-}
-```
-
 ## API Reference
 ### pea(service, type?)
 
@@ -152,7 +119,7 @@ class DatabaseService {
 }
 declare module "@spea/registry" {
     export interface Registry {
-        [dbService]: typeof DatabaseService;
+        [dbService]: InstanceOf<typeof DatabaseService>;
     }
 }
 

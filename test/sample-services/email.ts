@@ -1,23 +1,23 @@
-import { authServiceSymbol,  } from "./auth";
+import { authServiceSymbol, } from "./auth";
 import { DBService, IDBService } from "./db";
-import { pea, serviceSymbol,  } from "@spea/pea";
-declare module "@spea/registry" {
+import { pea, serviceSymbol, } from "@spea/pea";
+declare module "@spea/pea" {
 
- interface Registry {
-    [emailServiceSymbol]: typeof EmailService;
- }
+    interface Registry {
+        [emailServiceSymbol]: typeof EmailService;
+    }
 }
 export const emailServiceSymbol = Symbol("email-service-type");
 
 export class EmailService {
     static [serviceSymbol] = emailServiceSymbol;
-    constructor(private authService = pea(authServiceSymbol), private dbService: IDBService = pea(DBService)) {}
+    constructor(private authService = pea(authServiceSymbol), private dbService: IDBService = pea(DBService)) { }
 
     async sendEmail(to: string, subject: string, body: string) {
-        if (await this.authService.isAuthenticated()){
+        if (await this.authService.isAuthenticated()) {
             console.log('authenticated');
         }
-        if (this.dbService.connection()){
+        if (this.dbService.connection()) {
             console.log('connected');
         }
         console.log(`Email sent to ${to} with subject "${subject}" and body "${body}"`);
