@@ -117,7 +117,7 @@ class DatabaseService {
     console.log('Connected to database');
   }
 }
-declare module "@spea/registry" {
+declare module "@spea/pea" {
     export interface Registry {
         [dbService]: InstanceOf<typeof DatabaseService>;
     }
@@ -133,6 +133,8 @@ class UserService {
     // ... fetch users
   }
 }
+const userService = context.resolve(UserService);
+userService.getUsers(); // Outputs: Connected to database
 ```
 
 ### context.register(service, ...args)

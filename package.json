@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/jspears/spea"
   },
-  "author": "John Spears",
+  "author": "Justin Spears",
   "keywords": [
     "dependency injection",
     "di",
@@ -30,7 +30,7 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsc",
+    "build": "tsc --excludeFiles src/__test__/**/*",
     "watch": "tsc -w",
     "clean": "rm -rf dist"
   },

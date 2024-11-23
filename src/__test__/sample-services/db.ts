@@ -1,5 +1,5 @@
 import { serviceSymbol } from "@spea/pea";
-import { pea } from "../../src/context";
+import { pea } from "../../context";
 
 export const dbServiceSymbol = Symbol('db-service-type');
 

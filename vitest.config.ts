@@ -3,8 +3,8 @@ import { defineConfig } from 'vitest/config'
 import tsConfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-    plugins: [tsConfigPaths({ projects: ['tsconfig.test.json'] })],
+    plugins: [tsConfigPaths()],
     test: {
-        include: ['test/**/*.test.ts']
+        include: ['./src/__test__/**/*.test.ts']
     },
 })

@@ -1,19 +1,19 @@
-import { pea } from "../../src/context";
+import { pea } from "../../context";
 import { DBService } from "./db";
 
 export const authServiceSymbol = Symbol('auth-service-type');
 
 
 
-export interface IAuthService  {
+export interface IAuthService {
     isAuthenticated(): Promise<boolean>;
-} 
+}
 
-export class AuthService implements IAuthService  {
-    
+export class AuthService implements IAuthService {
+
     public static readonly service = authServiceSymbol;
 
-    constructor(private readonly dbService = pea(DBService)) {}
+    constructor(private readonly dbService = pea(DBService)) { }
 
     async isAuthenticated() {
         this.dbService.connection();
@@ -24,6 +24,6 @@ export class AuthService implements IAuthService  {
 
 declare module "@spea/registry" {
     export interface Registry {
-       [authServiceSymbol]: InstanceType<typeof AuthService>    ;
+        [authServiceSymbol]: InstanceType<typeof AuthService>;
     }
-   }
+}
