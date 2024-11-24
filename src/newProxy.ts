@@ -1,7 +1,6 @@
-import { isPrimitiveType } from "./guards";
-import type { Primitive, PrimitiveType, Class, CtxValue } from "./types";
+import type { Primitive, CtxValue, Constructor } from "./types";
 
-export function newProxy<T extends Class>(
+export function newProxy<T extends Constructor>(
   instance: () => InstanceType<T>
 ) {
   return new Proxy({} as InstanceType<T>, {
@@ -16,15 +15,28 @@ export function newProxy<T extends Class>(
       return Object.keys(instance());
     },
     getPrototypeOf: () => {
-      return Object.getPrototypeOf(instance());
+      const v = instance();
+      const proto = Object.getPrototypeOf(v);
+      return proto;
     },
   });
 
 }
-
+const proxyable = (value: any) => {
+  switch (typeof value) {
+    case 'string': return new String(value);
+    case 'number': return new Number(value);
+    case 'boolean': return new Boolean(value);
+    case 'symbol': throw new Error(`symbol not supported`);
+    case 'bigint': throw new Error(`bigint not supported`);
+    default:
+      throw new Error(`unknown type ${typeof value}`);
+  }
+}
 
 export function createPrimitiveProxy(ctx: CtxValue<Primitive>) {
-  return new Proxy(ctx, {
+
+  return new Proxy(proxyable(ctx.instance), {
     getPrototypeOf() {
       switch (typeof ctx.instance) {
         case 'string':
@@ -41,9 +53,16 @@ export function createPrimitiveProxy(ctx: CtxValue<Primitive>) {
       return Object.getPrototypeOf(ctx.instance);
     },
     get(target, prop) {
-      const prim = Reflect.get(target, 'instance') as any;
+      const prim = ctx.instance as any;
+      if (prop === Symbol.toPrimitive || prop === Symbol.toStringTag || prop === '$$typeof') {
+        return prim[prop];
+      }
       const value = prim[prop as any];
-      return typeof value === 'function' ? value.bind(prim) : value;
+      return value == null ? prim : typeof value === 'function' ? value.bind(prim) : value;
+    },
+    ownKeys() {
+      const ret = Object.getOwnPropertyNames(proxyable(ctx.instance));
+      return ret;
     },
     // set(target, prop, value) {
     //   target.value = value;

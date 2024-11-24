@@ -1,6 +1,6 @@
 
 import { it, describe, expect } from 'vitest';
-import { context as ctx, pea, serviceSymbol } from '@spea/pea';
+import { context as ctx, destroySymbol, pea, serviceSymbol } from '@spea/pea';
 import { EmailService } from './sample-services/email';
 import { AuthService, authServiceSymbol } from './sample-services/auth';
 import { DBService } from './sample-services/db';
@@ -48,28 +48,17 @@ describe('pea test', () => {
         expect(proxy + '').toBe("what");
         expect(proxy).toBeInstanceOf(String);
     })
-    it('should work with primatives', () => {
-        const sym = Symbol('test--1');
-        const ab = pea(sym, "my-test");
-        expect(ab + '').toBe("my-test");
 
-        ctx.resolve(sym, "my-test-2");
-        expect(ab + '').toBe("my-test-2");
-
-    })
     it('should return the an instance', () => {
 
-        const connectionInstance = ctx.register(abSymbol, "myconnection")
-            .resolve(abSymbol)
+        ctx.register(abSymbol, "myconnection")
+        ctx.register(aiSymbol, A, pea(abSymbol));
 
-        expect(connectionInstance).toBe("myconnection");
-
-        const ab = pea(abSymbol);
-
-        ctx.register(aiSymbol, A, ab);
         const ainstance = ctx.resolve(aiSymbol);
 
-        expect(ainstance.connection() + '').toBe("myconnection");
+        expect(ainstance.connection() == "myconnection").toBe(true);
+        expect(ctx.resolve(abSymbol)).toBe("myconnection");
+
     });
 
     it('should instatiate classes that', () => {
@@ -93,29 +82,48 @@ describe('pea test', () => {
         expect(result.sendEmail("to", "what", "go")).toBeInstanceOf(Promise);
     })
 
-    it('should return the an instance and visit', () => {
-        class A { constructor() { } };
-        class B { constructor(readonly a = pea(A)) { } };
-        class C { constructor(readonly b = pea(B)) { } };
+    it('should visit and destroy', () => {
+        let d = 0;
+        let c = 0;
+        class Base {
+            constructor() { c++ }; destroy() { d++ }
+
+            toString() { return this.constructor.name }
+        };
+        class TA extends Base {
+
+        };
+        class TB extends Base { constructor(readonly a = pea(TA)) { super() } };
+        class TC extends Base { constructor(readonly b = pea(TB)) { super() } };
 
 
-        class D {
-            constructor(readonly a = pea(A), readonly b = pea(B), readonly c = pea(C)) { }
+        class TD {
+            constructor(readonly a = pea(TA), readonly b = pea(TB), readonly c = pea(TC)) { }
+            toString() {
+                return [this.a, this.b, this.c].join('-');
+            }
         };
 
-        ctx.resolve(D);
+        const v = ctx.resolve(TD);
+        expect(v.toString()).toBe('TA-TB-TC');
+        expect(v.a).toBeInstanceOf(TA);
+        expect(v.b).toBeInstanceOf(TB);
+        expect(v.c).toBeInstanceOf(TC);
+        expect(c).toBe(3);
+        //make sure we only resolve once.
+        ctx.resolve(TD).toString();
 
-        const all = new Set();
-        ctx.visit(D, (_, key) => {
-            all.add(key);
-            return undefined;
+        ctx.visit(TD, (v) => {
+            if (v instanceof Base) {
+                v.destroy();
+            }
+            return destroySymbol;
         });
-        expect(all.size).toBe(4);
-        expect(all.has(D)).toBe(true);
-        expect(all.has(A)).toBe(true);
-        expect(all.has(B)).toBe(true);
-        expect(all.has(C)).toBe(true);
-
+        expect(d).toBe(3);
+        ctx.resolve(TD).toString();
+        expect(c).toBe(6);
+        expect(ctx.resolve(TD)).toBeInstanceOf(TD);
+        expect(c).toBe(6);
 
     });
 

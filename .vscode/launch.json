@@ -20,7 +20,7 @@
             },
             "runtimeArgs": ["vitest"],
             "type": "node",
-            "program": "${workspaceFolder}/test/inject.test.ts",
+            "program": "${workspaceFolder}/src/__test__/*.test.ts",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
