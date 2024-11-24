@@ -3,8 +3,6 @@ import { Registry } from "./registry";
 import { destroySymbol, removeSymbol, serviceSymbol } from "./symbols";
 import { hasA, isConstructor, isFn, isPrimitive, isSymbol } from "./guards";
 import type { Service, Constructor, CtxClass, CtxFn, CtxValue, ValueOf, Fn, Primitive, PrimitiveType, PrimitiveValue, VisitFn, PeaKey, Ctx, CKey, RegistryType } from "./types";
-import { T } from "vitest/dist/chunks/environment.LoooBwUu";
-
 
 
 export type ContextType = InstanceType<typeof Context>;
@@ -13,7 +11,7 @@ class Context<TRegistry extends RegistryType = Registry> {
     //this thing is used to keep track of dependencies. 
     #dependencies = new Set<CKey>();
     #map = new Map<CKey, Ctx<TRegistry, any>>();
-    constructor(private readonly parent?: Context<TRegistry>) {
+    constructor(private readonly parent?: Context<any>) {
     }
     pea<T extends Fn>(service: T & Service): ValueOf<TRegistry, T>;
     pea<T extends Fn>(service: T): ValueOf<TRegistry, T>;
@@ -78,7 +76,7 @@ class Context<TRegistry extends RegistryType = Registry> {
         } if (result === removeSymbol) {
             this.#map.delete(service);
         } else {
-            ctx.instance = fn(ctx.instance, service as any);
+            ctx.instance = result;
         }
     }
 
@@ -89,7 +87,7 @@ class Context<TRegistry extends RegistryType = Registry> {
     register<T extends keyof TRegistry>(service: T, value: TRegistry[T]): this;
     register<T extends Constructor>(service: T, ...args: ConstructorParameters<T>): this;
     register<T extends Fn>(service: T, ...args: any[]): this;
-    register<T>(service: PeaKey<TRegistry>, ..._args: any[]): this {
+    register(service: PeaKey<TRegistry>, ..._args: any[]): this {
         const key = keyOf(service);
         let serv: Constructor | Fn | unknown = service;
         let args: any[] = _args;
@@ -172,8 +170,8 @@ class Context<TRegistry extends RegistryType = Registry> {
         throw new PeaError(`unknown state for '${String(service)}'`);
     }
 
-    newContext() {
-        return new Context<TRegistry>(this);
+    newContext<TTRegistry extends TRegistry = TRegistry>() {
+        return new Context<TTRegistry>(this);
     }
 }
 
@@ -187,7 +185,6 @@ export function pea<T extends Fn, K extends keyof Registry>(fn: T & { [serviceSy
 export function pea<T extends Constructor, K extends keyof Registry>(fn: T & { [serviceSymbol]: K }): Registry[K];
 
 export function pea<T extends PrimitiveType>(service: symbol, type: T): PrimitiveValue<T>;
-export function pea<T>(service: symbol, type: T): T extends PrimitiveType ? PrimitiveValue<T> : T extends Constructor ? InstanceType<T> : T extends Fn ? ReturnType<T> : never;
 export function pea<T extends Constructor>(constructor: T): InstanceType<T>;
 export function pea<T extends Fn>(factory: T): ReturnType<T>;
 
