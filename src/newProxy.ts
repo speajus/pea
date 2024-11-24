@@ -1,4 +1,4 @@
-import type { Primitive, CtxValue, Constructor } from "./types";
+import type { Primitive, CtxValue, Constructor, RegistryType } from "./types";
 
 export function newProxy<T extends Constructor>(
   instance: () => InstanceType<T>
@@ -34,7 +34,7 @@ const proxyable = (value: any) => {
   }
 }
 
-export function createPrimitiveProxy(ctx: CtxValue<Primitive>) {
+export function createPrimitiveProxy<TRegistry extends RegistryType>(ctx: CtxValue<TRegistry, Primitive>) {
 
   return new Proxy(proxyable(ctx.instance), {
     getPrototypeOf() {

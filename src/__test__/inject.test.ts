@@ -3,7 +3,7 @@ import { it, describe, expect } from 'vitest';
 import { context as ctx, destroySymbol, pea, serviceSymbol } from '@spea/pea';
 import { EmailService } from './sample-services/email';
 import { AuthService, authServiceSymbol } from './sample-services/auth';
-import { DBService } from './sample-services/db';
+import { connectionSymbol, DBService } from './sample-services/db';
 
 const aiSymbol = Symbol('a');
 const abSymbol = Symbol('b');
@@ -37,7 +37,6 @@ describe('pea test', () => {
                 return String.prototype;
             },
             get(target, prop, receiver) {
-                console.log({ receiver, target, prop });
                 const prim = Reflect.get(target, 'value');
                 const value = prim[prop as any] as any;
                 return typeof value === 'function' ? value.bind(prim) : value;
@@ -76,6 +75,7 @@ describe('pea test', () => {
 
     it('should in inject the things', async () => {
         ctx.register(authServiceSymbol, AuthService);
+        ctx.register(connectionSymbol, "hello");
         ctx.register(DBService);
         const result = ctx.resolve(EmailService);
         expect(result).toBeInstanceOf(EmailService);

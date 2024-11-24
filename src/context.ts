@@ -1,28 +1,29 @@
 import { createPrimitiveProxy, newProxy } from "./newProxy";
 import { Registry } from "./registry";
 import { destroySymbol, removeSymbol, serviceSymbol } from "./symbols";
-import { has, hasA, isConstructor, isFn, isPrimitive, isSymbol } from "./guards";
-import type { Service, Constructor, CtxClass, CtxFn, CtxValue, ValueOf, Fn, Primitive, PrimitiveType, PrimitiveValue, VisitFn, PeaKey, Ctx, CKey } from "./types";
+import { hasA, isConstructor, isFn, isPrimitive, isSymbol } from "./guards";
+import type { Service, Constructor, CtxClass, CtxFn, CtxValue, ValueOf, Fn, Primitive, PrimitiveType, PrimitiveValue, VisitFn, PeaKey, Ctx, CKey, RegistryType } from "./types";
+import { T } from "vitest/dist/chunks/environment.LoooBwUu";
 
 
 
 export type ContextType = InstanceType<typeof Context>;
 
-class Context {
+class Context<TRegistry extends RegistryType = Registry> {
     //this thing is used to keep track of dependencies. 
-    static #dependencies = new Set<CKey>();
-    #map = new Map<CKey, Ctx<any>>();
-    constructor(private readonly parent?: Context) {
+    #dependencies = new Set<CKey>();
+    #map = new Map<CKey, Ctx<TRegistry, any>>();
+    constructor(private readonly parent?: Context<TRegistry>) {
     }
-    pea<T extends Fn>(service: T & Service): ValueOf<T>;
-    pea<T extends Fn>(service: T): ValueOf<T>;
-    pea<T extends Constructor>(service: T & Service): ValueOf<T>;
-    pea<T extends Constructor>(service: T): ValueOf<T>;
-    pea<T extends keyof Registry>(service: T): ValueOf<T>;
-    pea<T extends PrimitiveType>(service: symbol, type: T): ValueOf<T>;
-    pea<T extends PeaKey, K = never>(service: T, ...args: any[]): ValueOf<T, K> {
+    pea<T extends Fn>(service: T & Service): ValueOf<TRegistry, T>;
+    pea<T extends Fn>(service: T): ValueOf<TRegistry, T>;
+    pea<T extends Constructor>(service: T & Service): ValueOf<TRegistry, T>;
+    pea<T extends Constructor>(service: T): ValueOf<TRegistry, T>;
+    pea<T extends keyof Registry>(service: T): ValueOf<TRegistry, T>;
+    pea<T extends PrimitiveType>(service: symbol, type: T): ValueOf<TRegistry, T>;
+    pea<T extends PeaKey<TRegistry>, K = never>(service: T, ...args: any[]): ValueOf<TRegistry, T, K> {
         const key = keyOf(service);
-        Context.#dependencies.add(key);
+        this.#dependencies.add(key);
         const ctx = this.has(key) ? this.ctx(key) : this.register(service as any, ...args).ctx(key);
         return ctx.proxy ?? (ctx.proxy =
             isPrimitiveCtx(ctx) ? createPrimitiveProxy(ctx) :
@@ -35,10 +36,10 @@ class Context {
      * used for trigger init methods.  It will only visit each dependency once.
      *  
      * 
-     * ```
+     * ```typescript
      *   context.visit(EmailService, (v)=>{
      *     v.destroy?.();
-     *     return undefined;
+     *     return removeSymbol;
      *   });
      * 
      * ```
@@ -46,21 +47,21 @@ class Context {
      * @param service 
      * @param fn 
      */
-    visit(fn: VisitFn<unknown>): void;
-    visit<T extends PeaKey>(service: T, fn: VisitFn<T>): void;
-    visit<T extends PeaKey>(service: T | VisitFn<unknown>, fn?: VisitFn<T> | undefined) {
+    visit(fn: VisitFn<TRegistry, unknown>): void;
+    visit<T extends PeaKey<TRegistry>>(service: T, fn: VisitFn<TRegistry, T>): void;
+    visit<T extends PeaKey<TRegistry>>(service: T | VisitFn<TRegistry, unknown>, fn?: VisitFn<TRegistry, T> | undefined) {
         const key = keyOf(service);
         if (isFn(fn)) {
             this._visit(key, fn as any);
         } else if (isFn(service)) {
             for (const key of this.#map.keys()) {
-                this._visit(key, service);
+                this._visit(key, service as any);
             }
         } else {
             throw new PeaError('invalid arguments');
         }
     }
-    private _visit(service: CKey, fn: (value: unknown, mapKey: PeaKey) => unknown, seen = new Set<CKey>()) {
+    private _visit(service: CKey, fn: (value: unknown, mapKey: PeaKey<TRegistry>) => unknown, seen = new Set<CKey>()) {
         if (seen.size === seen.add(service).size) {
             return;
         }
@@ -85,10 +86,10 @@ class Context {
     register<T extends Primitive>(service: symbol, value: T): this;
     register<T extends Fn>(service: symbol, fn: T, ...args: Parameters<T>): this;
     register<T extends Constructor>(service: symbol, constructor: T, ...args: ConstructorParameters<T>): this;
-    register<T extends keyof Registry>(service: T, value: Registry[T]): this;
+    register<T extends keyof TRegistry>(service: T, value: TRegistry[T]): this;
     register<T extends Constructor>(service: T, ...args: ConstructorParameters<T>): this;
     register<T extends Fn>(service: T, ...args: any[]): this;
-    register<T>(service: PeaKey, ..._args: any[]): this {
+    register<T>(service: PeaKey<TRegistry>, ..._args: any[]): this {
         const key = keyOf(service);
         let serv: Constructor | Fn | unknown = service;
         let args: any[] = _args;
@@ -124,7 +125,7 @@ class Context {
     private has(key: CKey): boolean {
         return this.#map.has(key) ?? this.parent?.has(key) ?? false;
     }
-    private ctx(k: CKey, defaults?: Ctx<any>): Ctx<any> {
+    private ctx(k: CKey, defaults?: Ctx<TRegistry, any>): Ctx<TRegistry, any> {
         let ret = this.#map.get(k) ?? this.parent?.ctx(k);
         if (!ret) {
             this.#map.set(k, (ret = defaults ?? { resolved: false }));
@@ -134,14 +135,14 @@ class Context {
         return ret;
     }
     resolve<T extends Primitive>(key: symbol, value: T): T;
-    resolve<T extends Constructor>(key: symbol, service: T, ...args: ConstructorParameters<T>): ValueOf<T>;
-    resolve<T extends Fn>(key: symbol, service: T, ...args: Parameters<T>): ValueOf<T>;
-    resolve<T extends Constructor & Service>(service: T, ...args: ConstructorParameters<T>): ValueOf<T>;
-    resolve<T extends Constructor>(service: T, ...args: ConstructorParameters<T>): ValueOf<T>;
-    resolve<T extends Fn & Service>(service: T, ...args: Parameters<T>): ValueOf<T>;
-    resolve<T extends Fn>(service: T, ...args: Parameters<T>): ValueOf<T>;
-    resolve<T extends keyof Registry>(service: T): ValueOf<T>;
-    resolve<T extends (Constructor & Service) | Fn | keyof Registry>(service: T, ..._args: any[]): ValueOf<T> {
+    resolve<T extends Constructor>(key: symbol, service: T, ...args: ConstructorParameters<T>): ValueOf<TRegistry, T>;
+    resolve<T extends Fn>(key: symbol, service: T, ...args: Parameters<T>): ValueOf<TRegistry, T>;
+    resolve<T extends Constructor & Service>(service: T, ...args: ConstructorParameters<T>): ValueOf<TRegistry, T>;
+    resolve<T extends Constructor>(service: T, ...args: ConstructorParameters<T>): ValueOf<TRegistry, T>;
+    resolve<T extends Fn & Service>(service: T, ...args: Parameters<T>): ValueOf<TRegistry, T>;
+    resolve<T extends Fn>(service: T, ...args: Parameters<T>): ValueOf<TRegistry, T>;
+    resolve<T extends keyof TRegistry>(service: T): ValueOf<TRegistry, T>;
+    resolve<T extends (Constructor & Service) | Fn | keyof TRegistry>(service: T, ..._args: any[]): ValueOf<TRegistry, T> {
         const key = keyOf(service);
         if (!this.has(key)) {
             //Tried to resolve a service that was not registered.  
@@ -156,15 +157,15 @@ class Context {
             return ctx.instance;
         }
 
-        if (isFactoryCtx(ctx)) {
+        if (isFactoryCtx<TRegistry>(ctx)) {
             ctx.resolved = true;
-            ctx.dependencies = Context.#dependencies = new Set();
+            ctx.dependencies = this.#dependencies = new Set();
             ctx.instance = ctx._factory(...ctx.args);
             return ctx.instance;
         }
         if (isConstructorCtx(ctx)) {
             ctx.resolved = true;
-            ctx.dependencies = Context.#dependencies = new Set();
+            ctx.dependencies = this.#dependencies = new Set();
             ctx.instance = new (ctx._constructor)(...ctx.args)
             return ctx.instance;
         }
@@ -172,11 +173,15 @@ class Context {
     }
 
     newContext() {
-        return new Context(this);
+        return new Context<TRegistry>(this);
     }
 }
 
-export const context = new Context();
+export function createNewContext<TRegistry extends RegistryType>() {
+    return new Context<TRegistry>();
+}
+
+export const context = createNewContext<Registry>();
 export function pea<T extends keyof Registry>(service: T): Registry[T];
 export function pea<T extends Fn, K extends keyof Registry>(fn: T & { [serviceSymbol]: K }): Registry[K];
 export function pea<T extends Constructor, K extends keyof Registry>(fn: T & { [serviceSymbol]: K }): Registry[K];
@@ -192,17 +197,17 @@ export function pea<T extends Constructor | Fn | keyof Registry>(service: T, ...
     return context.pea.apply(context, [service, ...args] as any) as any;
 };
 
-function keyOf(key: PeaKey | Service): CKey {
+function keyOf(key: PeaKey<any> | Service): CKey {
     return hasA(key, serviceSymbol, isSymbol) ? key[serviceSymbol] as any : key as any;
 }
 
-function isFactoryCtx(ctx: Ctx<any>): ctx is CtxFn<any> {
+function isFactoryCtx<TRegistry extends RegistryType>(ctx: Ctx<TRegistry, any>): ctx is CtxFn<TRegistry, any> {
     return hasA(ctx, '_factory', isFn);
 }
-function isConstructorCtx(ctx: Ctx<any>): ctx is CtxClass<any> {
+function isConstructorCtx<TRegistry extends RegistryType>(ctx: Ctx<TRegistry, any>): ctx is CtxClass<TRegistry, any> {
     return hasA(ctx, '_constructor', isFn);
 }
-function isPrimitiveCtx(ctx: Ctx<any>): ctx is CtxValue<Primitive> {
+function isPrimitiveCtx<TRegistry extends RegistryType>(ctx: Ctx<TRegistry, any>): ctx is CtxValue<TRegistry, Primitive> {
     return ctx.primitive === true;
 }
 
