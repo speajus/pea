@@ -112,11 +112,14 @@ class Context<TRegistry extends RegistryType = Registry> {
             primitive: true,
             instance: serv,
             resolved: true
-        } : null;
+        } : //should be a plain object 
+            {
+                primitive: false,
+                instance: serv,
+                resolved: true
+            };
 
-        if (ctx == null) {
-            throw new PeaError(`unknown service type for '${String(key)}'`);
-        }
+
         this.ctx(key, ctx);
         return this;
     }

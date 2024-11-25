@@ -146,5 +146,11 @@ describe('pea test', () => {
         customContext.register(someKey, 'custom value');
 
         expect(customContext.resolve(someKey)).toBe('custom value');
-    })
+    });
+    it('should inject non primitive objects', () => {
+        const CONFIG = Symbol('Config');
+
+        ctx.register(CONFIG, { test: 1 });
+        expect(ctx.resolve(CONFIG).test).toBe(1);
+    });
 })
