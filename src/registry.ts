@@ -1,5 +1,3 @@
 import { RegistryType } from "./types";
 
-export interface Registry extends RegistryType {
-
-}
+export interface Registry extends RegistryType {}

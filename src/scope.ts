@@ -53,7 +53,7 @@
 
 // // return [run, function withScope<T extends Constructor | Fn | Service | keyof Registry, Fn>(
 // //   service: T,
-// //   ...args: 
+// //   ...args:
 // // ){
 
 // //   return newProxy(()=> {
