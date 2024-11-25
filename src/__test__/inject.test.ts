@@ -1,9 +1,10 @@
 
 import { it, describe, expect } from 'vitest';
-import { context as ctx, destroySymbol, pea, serviceSymbol } from '@spea/pea';
+import { context as ctx, destroySymbol, pea, RegistryType, serviceSymbol } from '@spea/pea';
 import { EmailService } from './sample-services/email';
 import { AuthService, authServiceSymbol } from './sample-services/auth';
 import { connectionSymbol, DBService } from './sample-services/db';
+import { createNewContext } from '@spea/pea';
 
 const aiSymbol = Symbol('a');
 const abSymbol = Symbol('b');
@@ -127,4 +128,23 @@ describe('pea test', () => {
 
     });
 
+    it('should work with Service', () => {
+        class TT {
+            static [serviceSymbol] = Symbol('tt');
+        }
+
+        expect(ctx.resolve(TT)).toBeInstanceOf(TT);
+    })
+    it('should work with custom context', () => {
+
+        const someKey = Symbol('custom');
+        interface CustomRegistry extends RegistryType {
+            [someKey]: string;
+        }
+        const customContext = createNewContext<CustomRegistry>();
+
+        customContext.register(someKey, 'custom value');
+
+        expect(customContext.resolve(someKey)).toBe('custom value');
+    })
 })
