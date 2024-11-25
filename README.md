@@ -27,13 +27,13 @@ This has no runtime dependencies.  It also works with most modern JS runtimes.
 ## Installation
 
 ```bash
-npm install @spea/pea
+npm install @speajus/pea
 ```
 
 or
 
 ```bash
-yarn add @spea/pea
+yarn add @speajus/pea
 ```
 
 ## Basic Usage
@@ -41,7 +41,7 @@ yarn add @spea/pea
 Here's a simple example of how to use Injection:
 
 ```typescript
-import { pea, context } from '@spea/pea';
+import { pea, context } from '@speajus/pea';
 
 // Define a service
 class DatabaseService {
@@ -74,7 +74,7 @@ userService.getUsers(); // Outputs: Connected to database
 You can use symbols to register and retrieve services:
 
 ```typescript
-import { pea, context } from '@spea/pea';
+import { pea, context } from '@speajus/pea';
 
 const dbService = Symbol('DatabaseService');
 
@@ -84,7 +84,7 @@ class DatabaseService {
   }
 }
 //this makes pea work with symbols
-declare module "@spea/registry" {
+declare module "@speajus/registry" {
     export interface Registry {
         [dbService]: typeof DatabaseService;
     }
@@ -118,7 +118,7 @@ class DatabaseService {
     console.log('Connected to database');
   }
 }
-declare module "@spea/pea" {
+declare module "@speajus/pea" {
     export interface Registry {
         [dbService]: InstanceOf<typeof DatabaseService>;
     }

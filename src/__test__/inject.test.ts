@@ -5,11 +5,11 @@ import {
     pea,
     RegistryType,
     serviceSymbol,
-} from "@spea/pea";
+} from "@speajus/pea";
 import { EmailService } from "./sample-services/email";
 import { AuthService, authServiceSymbol } from "./sample-services/auth";
 import { connectionSymbol, DBService } from "./sample-services/db";
-import { createNewContext } from "@spea/pea";
+import { createNewContext } from "@speajus/pea";
 
 const aiSymbol = Symbol("a");
 const abSymbol = Symbol("b");
@@ -25,7 +25,7 @@ class C {
     constructor(readonly a = pea(aiSymbol)) { }
 }
 type AI = InstanceType<typeof A>;
-declare module "@spea/pea" {
+declare module "@speajus/pea" {
     export interface Registry {
         [aiSymbol]: AI;
         [abSymbol]: string;

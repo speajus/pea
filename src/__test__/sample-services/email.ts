@@ -1,7 +1,7 @@
 import { authServiceSymbol } from "./auth";
 import { DBService, IDBService } from "./db";
-import { pea, serviceSymbol } from "@spea/pea";
-declare module "@spea/pea" {
+import { pea, serviceSymbol } from "@speajus/pea";
+declare module "@speajus/pea" {
   interface Registry {
     [emailServiceSymbol]: typeof EmailService;
   }
@@ -13,7 +13,7 @@ export class EmailService {
   constructor(
     private authService = pea(authServiceSymbol),
     private dbService: IDBService = pea(DBService),
-  ) {}
+  ) { }
 
   async sendEmail(to: string, subject: string, body: string) {
     if (await this.authService.isAuthenticated()) {

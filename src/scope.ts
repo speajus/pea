@@ -2,7 +2,7 @@
 // import type { Fn, Constructor, Service } from "./types";
 // import { newProxy } from "./newProxy";
 // import { context, ContextType } from './context';
-// import { Registry } from "@spea/registry";
+// import { Registry } from "@speajus/registry";
 // /**
 //  * You can create your own 'scopes' this function.  This
 //  * will keep all the results in memory for the duration of the scope.

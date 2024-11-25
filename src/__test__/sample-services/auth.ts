@@ -10,7 +10,7 @@ export interface IAuthService {
 export class AuthService implements IAuthService {
   public static readonly service = authServiceSymbol;
 
-  constructor(private readonly dbService = pea(DBService)) {}
+  constructor(private readonly dbService = pea(DBService)) { }
 
   async isAuthenticated() {
     this.dbService.connection();
@@ -19,7 +19,7 @@ export class AuthService implements IAuthService {
   }
 }
 
-declare module "@spea/pea" {
+declare module "@speajus/pea" {
   export interface Registry {
     [authServiceSymbol]: InstanceType<typeof AuthService>;
   }
