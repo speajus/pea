@@ -5,6 +5,7 @@ A lightweight Dependency Injection (DI) framework for Node.js, based on proxies.
 ## Overview
 
 Injection is a simple yet powerful DI framework designed to make dependency management in Node.js applications easier and more flexible. It leverages JavaScript proxies to provide a seamless integration experience.
+Some more examples can be found [here](https://github.com/speajus/spea-example/tree/main)
 
 **Note: This project is still a work in progress. APIs may change, and additional features are planned.**
 
