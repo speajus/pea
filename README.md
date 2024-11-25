@@ -151,6 +151,19 @@ Resolves a service with the given arguments.
 Visits all dependencies of a service. This can be used to destroy all dependencies, or something, else. The
 return of `fn` becomes the new value of the dependency. As primitives do not have dependencies, they do not get visited.   
 
+
+## Limitations
+When using factories as keys, the arguments are not resolved.  This is because the factory is not a constructor, and the arguments are not passed to the factory.  This is a limitation of the current API, we can not differentiate
+between trying to use a factory as a key, or trying to use a factory as a service.  There would be no way to differentiate trying to replace the factory or trying register it.  We may need to add additional API to support this.
+
+## Invalidation
+When a service is registered, all service that depend on it are invalidated.  This means that all dependencies are resolved again.  This is done to ensure that all dependencies are up to date. 
+ This is done by keeping track of all dependencies.  
+
+## Caching
+Values are cached in the context. If at some point the value is changed, all services that depend on it are invalidated.  This is done by keeping track of all dependencies.  
+
+
 ## Roadmap
 
 - Improve documentation and add more examples
