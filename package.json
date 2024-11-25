@@ -1,6 +1,6 @@
 {
   "name": "@spea/pea",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "description": "A lightweight Dependency Injection (DI) framework for Node.js, based on proxies.",
   "type": "module",
