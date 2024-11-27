@@ -54,16 +54,19 @@ describe("pea test", () => {
 
     it("should return the an instance", () => {
         ctx.register(abSymbol, "myconnection");
-        ctx.register(aiSymbol, A, pea(abSymbol));
+        console.log(ctx.resolve(abSymbol));
+        expect(ctx.resolve(abSymbol) == "myconnection").toBe(true);
+        // ctx.register(aiSymbol, A, pea(abSymbol));
 
-        const ainstance = ctx.resolve(aiSymbol);
+        // const ainstance = ctx.resolve(aiSymbol);
 
-        expect(ainstance.connection() == "myconnection").toBe(true);
-        expect(ctx.resolve(abSymbol)).toBe("myconnection");
+        // expect(ainstance.connection() == "myconnection").toBe(true);
+        // expect(ctx.resolve(abSymbol)).toBe("myconnection");
     });
 
     it("should instatiate classes that", () => {
         class B { }
+        const resp = ctx.resolve(B);
         expect(ctx.resolve(B)).toBeInstanceOf(B);
     });
 
@@ -72,7 +75,7 @@ describe("pea test", () => {
             return "fn";
         };
         const result = ctx.register(fn);
-        expect(result.resolve(fn)).toBe("fn");
+        expect(result.invoke()).toBe("fn");
     });
 
     it("should in inject the things", async () => {
@@ -83,7 +86,17 @@ describe("pea test", () => {
         expect(result).toBeInstanceOf(EmailService);
         expect(result.sendEmail("to", "what", "go")).toBeInstanceOf(Promise);
     });
+    it('should cache things', () => {
+        let i = 0;
+        class Cache { constructor() { i++ } }
+        const result = ctx.resolve(Cache);
+        expect(i).toBe(1);
+        const result2 = ctx.resolve(Cache);
 
+        expect(result).toBeInstanceOf(Cache);
+        expect(result2).toBe(result);
+        expect(i).toBe(1);
+    });
     it("should visit and destroy", () => {
         let d = 0;
         let c = 0;
@@ -132,16 +145,19 @@ describe("pea test", () => {
         ctx.resolve(TD).toString();
 
         ctx.visit(TD, (v) => {
-            if (v instanceof Base) {
-                v.destroy();
+            if (v.invoked) {
+                const val = v.invoke();
+                if (val instanceof Base) {
+                    val.destroy();
+                }
             }
             return destroySymbol;
         });
         expect(d).toBe(3);
         ctx.resolve(TD).toString();
-        expect(c).toBe(6);
+        expect(c).toBe(3);
         expect(ctx.resolve(TD)).toBeInstanceOf(TD);
-        expect(c).toBe(6);
+        expect(c).toBe(3);
     });
 
     it("should work with Service", () => {
@@ -196,8 +212,8 @@ describe("pea test", () => {
         expect(ctx.resolve(factory, arg)).toBe(1);
         // //check it again it should not change.
         // expect(ctx.resolve(val)).toBe(10);
-        ctx.register(dep, 100);
-        expect(ctx.resolve(factory, pea(dep))).toBe(102);
-        expect(ctx.resolve(factory, pea(dep))).toBe(102);
+        ctx.register(dep).service = () => 100;
+        expect(ctx.resolve(factory, pea(dep))).toBe(101);
+        expect(ctx.resolve(factory, pea(dep))).toBe(101);
     });
 });

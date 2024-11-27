@@ -1,3 +1,4 @@
+import { ServiceDescriptor } from "./ServiceDescriptor";
 import { destroySymbol, removeSymbol, serviceSymbol } from "./symbols";
 
 export type Constructor = new (...args: any[]) => any;
@@ -10,10 +11,10 @@ export type ServiceReturn<
 > = T extends Constructor
   ? InstanceType<T>
   : T extends Fn
-    ? ReturnType<T>
-    : T extends keyof TRegistry
-      ? TRegistry[T]
-      : never;
+  ? ReturnType<T>
+  : T extends keyof TRegistry
+  ? TRegistry[T]
+  : never;
 
 //This is just a fake type to make key tracking easier.
 export type CKey = { __brand: "ContextKey" };
@@ -51,8 +52,8 @@ export type PeaKey<TRegistry extends RegistryType> =
 export type Ctx<TRegistry extends RegistryType, T> = T extends Constructor
   ? CtxClass<TRegistry, T>
   : T extends Fn
-    ? CtxFn<TRegistry, T>
-    : CtxValue<TRegistry, T>;
+  ? CtxFn<TRegistry, T>
+  : CtxValue<TRegistry, T>;
 
 export interface Service<T extends symbol = symbol> {
   [serviceSymbol]: T;
@@ -65,41 +66,34 @@ export type ValueOf<
 > = T extends Constructor
   ? InstanceType<T>
   : T extends Fn
-    ? ReturnType<T>
-    : T extends keyof TRegistry
-      ? TRegistry[T]
-      : K extends PrimitiveType
-        ? PrimitiveValue<K>
-        : T;
+  ? ReturnType<T>
+  : T extends keyof TRegistry
+  ? TRegistry[T]
+  : K extends PrimitiveType
+  ? PrimitiveValue<K>
+  : T;
 export type Primitive = string | number | boolean | symbol | bigint;
 export type PrimitiveType = String | Number | Boolean | Symbol | BigInt;
 export type PrimitiveValue<T extends PrimitiveType> = T extends String
   ? string
   : T extends Number
-    ? number
-    : T extends Boolean
-      ? boolean
-      : T extends Symbol
-        ? symbol
-        : T extends BigInt
-          ? bigint
-          : never;
+  ? number
+  : T extends Boolean
+  ? boolean
+  : T extends Symbol
+  ? symbol
+  : T extends BigInt
+  ? bigint
+  : never;
 
-type VisitFnType<K, V> = (
-  value: V,
-  mapKey: K,
-) => unknown | typeof destroySymbol | typeof removeSymbol;
+
 
 export type VisitFn<
   TRegistry extends RegistryType,
-  T,
-> = T extends keyof TRegistry
-  ? VisitFnType<keyof TRegistry, TRegistry[T]>
-  : T extends Constructor
-    ? VisitFnType<Constructor, InstanceType<T>>
-    : T extends Fn
-      ? VisitFnType<Fn, ReturnType<T>>
-      : never;
+  T extends PeaKey<TRegistry>,
+> = (
+  value: ServiceDescriptor<TRegistry, T>,
+) => unknown | typeof destroySymbol | typeof removeSymbol;
 
 export interface RegistryType {
   [key: symbol]: any;

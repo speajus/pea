@@ -1,14 +1,25 @@
+import { isProxy } from "util/types";
 import { keyOf } from "./context";
-import { has, isConstructor, isFn } from "./guards";
+import { has, isConstructor, isFn, isPea, PeaError } from "./guards";
 import { newProxy, proxyKey } from "./newProxy";
+import { Registry } from "./registry";
 import { serviceSymbol } from "./symbols";
 import { CKey, Constructor, Fn, PeaKey, RegistryType } from "./types";
 
-type Args<T> = T extends Constructor ? ConstructorParameters<T> : T extends Fn ? Parameters<T> : never;
-type Returns<T> = T extends Constructor ? InstanceType<T> : T extends Fn ? ReturnType<T> : never;
+const EMPTY = [] as const;
+type EmptyTuple = typeof EMPTY;
+
+type Args<T> = T extends Constructor ? ConstructorParameters<T> : T extends Fn ? Parameters<T> : EmptyTuple;
+type Returns<T> = T extends Constructor ? InstanceType<T>
+    : T extends Fn ? ReturnType<T> : T;
 
 
-export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constructor | Fn> {
+export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constructor | Fn | unknown> {
+    static #dependencies = new Set<CKey>();
+
+    static value<T extends keyof TRegistry & symbol, TRegistry extends RegistryType = Registry>(key: T, service: TRegistry[T]) {
+        return new ServiceDescriptor(key, service, EMPTY as any, false, false);
+    }
 
     static singleton<T extends Constructor | Fn>(service: T, ...args: Args<T>) {
         return new ServiceDescriptor(service, service, args);
@@ -19,31 +30,39 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
     }
 
 
-    readonly [serviceSymbol]: CKey;
+    readonly [serviceSymbol]: PeaKey<TRegistry>;
     dependencies?: Set<CKey>;
-
     private _instance?: Returns<T>;
-    private _invoked = false;
+    public invoked = false;
     private _cacheable = true;
     private _service?: T;
     private _args: Args<T> = [] as any;
     private _proxy?: Returns<T>;
-
+    private _factory = false;
+    public invalid = false;
     constructor(
         key: PeaKey<TRegistry>,
         service: T,
         args: Args<T>,
         cacheable = true,
+        public invokable = true,
     ) {
-        this[serviceSymbol] = keyOf(key);
-        this.service = service;
+        this[serviceSymbol] = key;
         this.args = args as Args<T>;
-        this.cacheable = cacheable;
+        this._cacheable = cacheable;
+        if (!invokable) {
+            //So if something is not invokable, it should never be invoked. Which is important.
+            this.invoked = false;
+        }
+        this.service = service;
+
 
     }
 
     get proxy() {
-        return this._proxy ??= newProxy(this[serviceSymbol], () => this.invoke());
+        const key = keyOf(this[serviceSymbol]);
+        ServiceDescriptor.#dependencies.add(key);
+        return (this._proxy ??= newProxy(key, this.invoke));
     }
 
     set cacheable(_cacheable: boolean) {
@@ -62,8 +81,12 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
         if (this._service === _service) {
             return;
         }
+        if (this.invoked) {
+            this.invalid = true;
+        }
         this.invalidate();
         this._service = _service;
+        this._factory = isFn(_service) && !isConstructor(_service);
     }
 
     get service() {
@@ -74,16 +97,42 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
         return this._args!;
     }
 
-    set args(_args: Args<T>) {
+    set args(newArgs: Args<T>) {
+        /**
+         * If the args are the same, we don't need to invalidate.  Also
+         * if the value hasn't been invoked, we don't need to invalidate.
+         */
+        // if (newArgs === this._args || (this._args?.length === newArgs.length &&
+        //     this._args.every((v, i) => v === newArgs[i] && !isPea(v)))) {
+        //     return;
+        // }
+        if (this.invoked) {
+            this.invalid = true;
+        }
         this.invalidate();
-        _args.forEach(arg => {
+        newArgs.forEach(arg => {
             if (has(arg, proxyKey)) {
                 this.addDependency((arg as any)[proxyKey]);
             }
         });
-        this._args = _args;
+        this._args = newArgs;
     }
-
+    withArgs(...args: Args<T>) {
+        this.args = args;
+        return this;
+    }
+    withService(service: T) {
+        this.service = service;
+        return this;
+    }
+    withCacheable(cacheable: boolean) {
+        this.cacheable = cacheable;
+        return this;
+    }
+    withInvokable(invokable: boolean) {
+        this.invokable = invokable;
+        return this;
+    }
     hasDependency(key: CKey) {
         return this.dependencies?.has(key) ?? false;
     }
@@ -97,15 +146,27 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
     }
 
     invalidate() {
-        this._invoked = false;
+        if (this.invoked === false) {
+            return;
+        }
+        this.invoked = false;
         this._instance = undefined;
     }
 
-    invoke(): Returns<T> {
-        if (this._invoked && this.cacheable) {
+    invoke = (): Returns<T> => {
+        if (!this.invokable) {
+            return this.service as Returns<T>;
+        }
+        if (!this.invalid && this.invoked && this.cacheable) {
             return this._instance as Returns<T>;
         }
-        const resp = isConstructor(this.service) ? new this.service(...this.args) : this.service(...this.args);
+        if (!isFn(this.service)) {
+            throw new PeaError(`service '${String(this.service)}' is not a function and is not configured as a value, to configure as a value set invokable to false on the service description`);
+        }
+        ServiceDescriptor.#dependencies.clear();
+        const resp = this._factory ? this.service(...this.args) : new (this.service as Constructor)(...this.args);
+        this.addDependency(...ServiceDescriptor.#dependencies);
+        this.invoked = true;
         if (this.cacheable) {
             return this._instance = resp;
         }
