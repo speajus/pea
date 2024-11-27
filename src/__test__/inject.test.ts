@@ -9,7 +9,7 @@ import {
 } from "@speajus/pea";
 import { EmailService } from "./sample-services/email";
 import { AuthService, authServiceSymbol } from "./sample-services/auth";
-import { connectionSymbol, DBService } from "./sample-services/db";
+import { connectionPeaKey, DBService } from "./sample-services/db";
 import { createNewContext } from "@speajus/pea";
 
 const aiSymbol = Symbol("a");
@@ -81,7 +81,7 @@ describe("pea test", () => {
 
     it("should in inject the things", async () => {
         ctx.register(authServiceSymbol, AuthService);
-        ctx.register(connectionSymbol, "hello");
+        ctx.register(connectionPeaKey, "hello");
         ctx.register(DBService);
         const result = ctx.resolve(EmailService);
         expect(result).toBeInstanceOf(EmailService);

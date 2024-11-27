@@ -1,25 +1,19 @@
-import { serviceSymbol } from "@speajus/pea";
+import { peaKey, serviceSymbol } from "@speajus/pea";
 import { pea } from "../../context";
 
-export const dbServiceSymbol = Symbol("db-service-type");
+export const dbServiceSymbol = peaKey<typeof DBService>("db-service-type");
 
-declare module "@speajus/pea" {
-  export interface Registry {
-    [dbServiceSymbol]: typeof DBService;
-    [connectionSymbol]: string;
-  }
-}
 
 export interface IDBService {
   connection(): string;
 }
 
-export const connectionSymbol = Symbol("db-service-connection");
+export const connectionPeaKey = peaKey<string>("connection");
 
 export class DBService implements IDBService {
   public static readonly [serviceSymbol] = dbServiceSymbol;
 
-  constructor(private readonly connectionUrl: string = pea(connectionSymbol)) { }
+  constructor(private readonly connectionUrl: string = pea(connectionPeaKey)) { }
   connection() {
     return this.connectionUrl;
   }
