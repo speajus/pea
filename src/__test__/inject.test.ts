@@ -233,6 +233,22 @@ describe("pea test", () => {
         ctx.register(pkey, () => "test");
         expect(ctx.resolve(pkey)).toBe("test");
     });
+    it('should handle mixed invocation', () => {
+        const pkey = peaKey<string>("test-3");
+        class TestA {
+            constructor(readonly a: number, public b = pea(pkey)) { }
+        }
+        ctx.register(pkey, () => "test");
+        const result = ctx.resolve(TestA, 2);
+        expect(result.a == 2).toBe(true);
+        expect(result.b == "test").toBe(true);
+    });
+    it('should handle mixed invocation with constructor with a lot', () => {
+        class TestAlot {
+            constructor(readonly a: number, public b: string, public c: string, public d: string) { }
+        }
+    });
+
     it('should be an error if the types do not align', () => {
         const pkey = peaKey<string>("test-3");
         //@ts-expect-error - this should be an error please do not remove.  You shouldn't be able to register a number as a string.
