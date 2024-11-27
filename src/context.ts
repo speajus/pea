@@ -23,7 +23,7 @@ import { serviceSymbol } from "./symbols";
 
 export type ContextType = InstanceType<typeof Context>;
 
-class Context<TRegistry extends RegistryType = Registry> {
+export class Context<TRegistry extends RegistryType = Registry> {
 
     //this thing is used to keep track of dependencies.
     #map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
@@ -90,31 +90,6 @@ class Context<TRegistry extends RegistryType = Registry> {
         fn(ctx);
     }
 
-    register<TKey extends PeaKey<TRegistry>, TService extends Factory<TKey, TRegistry>>(tkey: TKey, ...origArgs: [TService, ...PeaKeyRest<TService>] | PeaKeyRest<TService>): ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>> {
-        const key = keyOf(tkey);
-
-        let serv: Constructor | Fn | unknown = tkey;
-        let args: any[] = [...origArgs];
-
-        if (isSymbol(tkey)) {
-            serv = args.shift();
-        }
-
-        let inst = this.#map.get(key);
-
-        if (inst) {
-            if (origArgs?.length) {
-                inst.args = args;
-                inst.service = serv;
-            }
-            if (inst.invalid) {
-                this.invalidate(key);
-            }
-            return inst;
-        }
-        this.#map.set(key, (inst = new ServiceDescriptor<TRegistry, TService>(tkey, serv as any, args as any, true, isFn(serv))));
-        return inst;
-    }
     private has(key: CKey): boolean {
         return this.#map.has(key) ?? this.parent?.has(key) ?? false;
     }
@@ -147,7 +122,33 @@ class Context<TRegistry extends RegistryType = Registry> {
             }
         }
     }
-    resolve<TKey extends PeaKey<TRegistry>, TService extends Factory<TKey, TRegistry>>(tkey: TKey, ...args: [TService, ...PeaKeyRest<TService>] | PeaKeyRest<TService>): ValueOf<TRegistry, TKey> {
+    register<TKey extends PeaKey<TRegistry>>(tkey: TKey, ...origArgs: ServiceArgs<TKey, TRegistry> | []): ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>> {
+        const key = keyOf(tkey);
+
+        let serv: Constructor | Fn | unknown = tkey;
+        let args: any[] = [...origArgs];
+
+        if (isSymbol(tkey)) {
+            serv = args.shift();
+        }
+
+        let inst = this.#map.get(key);
+
+        if (inst) {
+            if (origArgs?.length) {
+                inst.args = args;
+                inst.service = serv;
+            }
+            if (inst.invalid) {
+                this.invalidate(key);
+            }
+            return inst;
+        }
+        this.#map.set(key, (inst = new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(tkey, serv as any, args as any, true, isFn(serv))));
+        return inst;
+    }
+
+    resolve<TKey extends PeaKey<TRegistry>>(tkey: TKey, ...args: ServiceArgs<TKey, TRegistry> | []): ValueOf<TRegistry, TKey> {
 
         return this.register(tkey, ...args).invoke() as any;
     }
@@ -177,15 +178,18 @@ export function keyOf(key: PeaKey<any> | Service): CKey {
 
 
 
+
+
 //The second argument is usually a factory.  It could also be a value.   This tries to enforce if it is a factory, it should 
 // return the right type.   It is a little broken, because if the first argument is a factory (and key) than the second argument
 // should be treated like an argument.   Which seems asymetrical but is I think correct.
-type Factory<T, TRegistry extends RegistryType = Registry> = T extends undefined ? undefined : T extends PeaKeyType<infer TValue> ? OfA<TValue> :
-    T extends Constructor ? ConstructorParameters<T>[0] :
-    T extends Fn ? Parameters<T>[0] :
-    T extends keyof TRegistry ? OfA<TRegistry[T]> : never;
 
-
-type PeaKeyRest<T> = T extends Constructor ? Rest<ConstructorParameters<T>> :
-    T extends Fn ? Rest<Parameters<T>> :
+type ServiceArgs<TKey, TRegistry extends RegistryType = Registry> =
+    TKey extends PeaKeyType<infer TValue> ? ParamArr<TValue> :
+    TKey extends keyof TRegistry ? ParamArr<TRegistry[TKey]> :
+    TKey extends Constructor ? ConstructorParameters<TKey> :
+    TKey extends Fn ? Parameters<TKey> :
     [];
+
+
+type ParamArr<T, TFn extends Fn<T> = Fn<T>, TCon extends Constructor<T> = Constructor<T>> = [TFn, ...Parameters<TFn>] | [TCon, ...ConstructorParameters<TCon>] | [T];
