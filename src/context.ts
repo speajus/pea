@@ -15,7 +15,6 @@ import type {
     Constructor,
     CtxClass,
     CtxFn,
-    CtxValue,
     ValueOf,
     Fn,
     Primitive,
@@ -50,10 +49,8 @@ class Context<TRegistry extends RegistryType = Registry> {
         const ctx = this.has(key)
             ? this.ctx(key)
             : this.register(service as any, ...args).ctx(key);
-        return (
-            ctx.proxy ??
-            (ctx.proxy = newProxy(key, () => this.resolve(service as any)))
-        );
+        return ctx.proxy ??= newProxy(key, () => this.resolve(key as any));
+
     }
 
     /**
@@ -294,12 +291,6 @@ class Context<TRegistry extends RegistryType = Registry> {
     }
 }
 
-function* concat<T>(...it: Iterable<T>[]) {
-    for (const i of it) {
-        yield* i;
-    }
-}
-
 export function createNewContext<TRegistry extends RegistryType>() {
     return new Context<TRegistry>();
 }
@@ -333,7 +324,7 @@ export function pea<T extends Constructor | Fn | keyof Registry>(
     return context.pea.apply(context, [service, ...args] as any) as any;
 }
 
-function keyOf(key: PeaKey<any> | Service): CKey {
+export function keyOf(key: PeaKey<any> | Service): CKey {
     return hasA(key, serviceSymbol, isSymbol)
         ? (key[serviceSymbol] as any)
         : (key as any);

@@ -65,3 +65,4 @@ export class PeaError extends Error {
         Object.setPrototypeOf(this, Error);
     }
 }
+
