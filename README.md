@@ -11,7 +11,7 @@ Some more examples can be found [here](https://github.com/speajus/spea-example/t
 
 ## Features
 
-- Lightweight and only 3 methods, `context.register`, `context.resolve` and `pea`.
+- Lightweight nearly everything is done with `peaKey`, `context.register`, `context.resolve` and `pea`.
 - Proxy-based lazy loading of dependencies 
 - No dependencies
 - Type-safe and fully typed
@@ -67,11 +67,40 @@ const userService = context.resolve(UserService);
 userService.getUsers(); // Outputs: Connected to database
 ```
 
+## PeaKey symbols
+
+You can use symbols to register and retrieve services, please use the `peaKey` symbols,
+as they provide type safety and do not require any additional configuration.
+```ts
+import { pea, context, peaKey } from '@speajus/pea';
+class DatabaseService {
+  connect() {
+    console.log('Connected to database');
+  }
+}
+const dbService = peaKey<DatabaseService>("db-service");
+
+// Register the service
+context.register(dbService, DatabaseService);
+
+// Use the service
+class UserService {
+  constructor(private db = pea(dbService)) {}
+
+  getUsers() {
+    this.db.connect();
+    // ... fetch users
+  }
+}
+
+const userService = context.resolve(UserService);
+```
+
 ## Advanced Usage
 
-### Custom Symbols
+### Custom Registry
 
-You can use symbols to register and retrieve services:
+You can use symbols to register and retrieve services, it is preferrable to use the `peaKey` symbols:
 
 ```typescript
 import { pea, context } from '@speajus/pea';

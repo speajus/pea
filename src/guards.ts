@@ -1,3 +1,4 @@
+import { proxyKey } from "./newProxy";
 import { serviceSymbol } from "./symbols";
 import { Constructor, Fn, Primitive, PrimitiveType } from "./types";
 
@@ -58,6 +59,9 @@ export function isPrimitiveType(v: unknown): v is PrimitiveType {
         v === Symbol ||
         v === BigInt
     );
+}
+export function isPea(v: unknown): v is { [proxyKey]: symbol } {
+    return hasA(v, proxyKey, isSymbol);
 }
 export class PeaError extends Error {
     constructor(message: string) {
