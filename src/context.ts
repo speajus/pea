@@ -178,8 +178,6 @@ export function keyOf(key: PeaKey<any> | Service): CKey {
 
 
 
-
-
 //The second argument is usually a factory.  It could also be a value.   This tries to enforce if it is a factory, it should 
 // return the right type.   It is a little broken, because if the first argument is a factory (and key) than the second argument
 // should be treated like an argument.   Which seems asymetrical but is I think correct.
