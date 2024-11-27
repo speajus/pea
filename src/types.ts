@@ -64,3 +64,6 @@ export interface RegistryType {
 
 
 export type PeaKeyType<T = any> = symbol & { [serviceSymbol]: T };
+export type Rest<T extends any[]> = T extends [any, ...infer U] ? U : [];
+
+export type OfA<T> = (Constructor<T> | Fn<T> | T);

@@ -4,7 +4,7 @@ import { has, isConstructor, isFn, isPea, PeaError } from "./guards";
 import { newProxy, proxyKey } from "./newProxy";
 import { Registry } from "./registry";
 import { serviceSymbol } from "./symbols";
-import { CKey, Constructor, Fn, PeaKey, RegistryType } from "./types";
+import { CKey, Constructor, Fn, OfA, PeaKey, RegistryType } from "./types";
 
 const EMPTY = [] as const;
 type EmptyTuple = typeof EMPTY;
@@ -35,7 +35,7 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
     private _instance?: Returns<T>;
     public invoked = false;
     private _cacheable = true;
-    private _service?: T;
+    private _service?: OfA<T>;
     private _args: Args<T> = [] as any;
     private _proxy?: Returns<T>;
     private _factory = false;
@@ -77,7 +77,7 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
         return this._cacheable;
     }
 
-    set service(_service: T) {
+    set service(_service: OfA<T>) {
         if (this._service === _service) {
             return;
         }
@@ -85,12 +85,13 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
             this.invalid = true;
         }
         this.invalidate();
+        this.invokable = isFn(_service);
         this._service = _service;
-        this._factory = isFn(_service) && !isConstructor(_service);
+        this._factory = this.invokable && !isConstructor(_service as Fn<T>);
     }
 
     get service() {
-        return this._service!;
+        return this._service as any;
     }
 
     get args() {
@@ -164,7 +165,7 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
             throw new PeaError(`service '${String(this.service)}' is not a function and is not configured as a value, to configure as a value set invokable to false on the service description`);
         }
         ServiceDescriptor.#dependencies.clear();
-        const resp = this._factory ? this.service(...this.args) : new (this.service as Constructor)(...this.args);
+        const resp = this._factory ? this.service(...this.args) : new (this.service as any)(...this.args);
         this.addDependency(...ServiceDescriptor.#dependencies);
         this.invoked = true;
         if (this.cacheable) {

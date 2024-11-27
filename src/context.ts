@@ -15,6 +15,8 @@ import type {
     CKey,
     RegistryType,
     PeaKeyType,
+    OfA,
+    Rest,
 } from "./types";
 import { ServiceDescriptor } from "./ServiceDescriptor";
 import { serviceSymbol } from "./symbols";
@@ -174,9 +176,7 @@ export function keyOf(key: PeaKey<any> | Service): CKey {
 }
 
 
-type Rest<T extends any[]> = T extends [any, ...infer U] ? U : [];
 
-type OfA<T> = (Constructor<T> | Fn<T> | T);
 //The second argument is usually a factory.  It could also be a value.   This tries to enforce if it is a factory, it should 
 // return the right type.   It is a little broken, because if the first argument is a factory (and key) than the second argument
 // should be treated like an argument.   Which seems asymetrical but is I think correct.
