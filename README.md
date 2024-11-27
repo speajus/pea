@@ -1,4 +1,4 @@
-# Injection
+# [@speajus/pea](https://github.com/speajus/pea)
 
 A lightweight Dependency Injection (DI) framework for Node.js, based on proxies.
 
@@ -13,12 +13,13 @@ Some more examples can be found [here](https://github.com/speajus/spea-example/t
 
 - Lightweight nearly everything is done with `peaKey`, `context.register`, `context.resolve` and `pea`.
 - Proxy-based lazy loading of dependencies 
-- No dependencies
+- No (runtime) dependencies
 - Type-safe and fully typed
 - Not based on decorators.
 - Constructor injection
 - Factory injection
 - Primitive injection
+- Caching 
 
 ## Dependencies and Requirements
 This has no runtime dependencies.  It also works with most modern JS runtimes.
