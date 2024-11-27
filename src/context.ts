@@ -14,8 +14,7 @@ import type {
     PeaKey,
     CKey,
     RegistryType,
-    Primitive,
-    PrimitiveType,
+    PeaKeyType,
 } from "./types";
 import { ServiceDescriptor } from "./ServiceDescriptor";
 import { serviceSymbol } from "./symbols";
@@ -27,19 +26,12 @@ class Context<TRegistry extends RegistryType = Registry> {
     //this thing is used to keep track of dependencies.
     #map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
     constructor(private readonly parent?: Context<any>) { }
-    pea<T extends Fn>(service: T & Service): ValueOf<TRegistry, T>;
-    pea<T extends Fn>(service: T): ValueOf<TRegistry, T>;
-    pea<T extends Constructor>(service: T & Service): ValueOf<TRegistry, T>;
-    pea<T extends Constructor>(service: T): ValueOf<TRegistry, T>;
-    pea<T extends keyof TRegistry>(service: T): ValueOf<TRegistry, T>;
-    pea<T extends PrimitiveType>(service: symbol, type: T): ValueOf<TRegistry, T>;
-
+    pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
     pea(
         service: unknown,
-        ...args: unknown[]
     ): unknown {
 
-        return (this.#map.get(keyOf(service as any)) ?? this.register(service as any, ...args)).proxy;
+        return (this.#map.get(keyOf(service as any)) ?? this.register(service as any)).proxy;
     }
 
     /**
@@ -96,44 +88,29 @@ class Context<TRegistry extends RegistryType = Registry> {
         fn(ctx);
     }
 
-    register<T extends Primitive>(service: symbol, value: T): ServiceDescriptor<TRegistry, T>;
-    register<T extends Fn>(service: symbol, fn: T, ...args: Parameters<T>): ServiceDescriptor<TRegistry, T>;
-    register<T extends Constructor>(
-        service: symbol,
-        constructor: T,
-        ...args: ConstructorParameters<T>
-    ): ServiceDescriptor<TRegistry, T>;
-    register<T extends keyof TRegistry>(service: T, value: TRegistry[T]): ServiceDescriptor<TRegistry, T>;
-    register<T extends Constructor>(
-        service: T,
-        ...args: ConstructorParameters<T>
-    ): ServiceDescriptor<TRegistry, T>;
-    register<T extends Fn>(service: T, ...args: any[]): ServiceDescriptor<TRegistry, T>;
-    register<T extends PeaKey<TRegistry>>(service: T, ..._args: any[]): ServiceDescriptor<TRegistry, T> {
-        const key = keyOf(service);
+    register<TKey extends PeaKey<TRegistry>, TService extends Factory<TKey, TRegistry>>(tkey: TKey, ...origArgs: [TService, ...PeaKeyRest<TService>] | PeaKeyRest<TService>): ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>> {
+        const key = keyOf(tkey);
 
-        let serv: Constructor | Fn | unknown = service;
-        let args: any[] = _args;
+        let serv: Constructor | Fn | unknown = tkey;
+        let args: any[] = [...origArgs];
 
-        if (isSymbol(service)) {
-
-            serv = _args[0];
-            args = _args.slice(1);
+        if (isSymbol(tkey)) {
+            serv = args.shift();
         }
 
-        let inst = this.#map.get(keyOf(service));
+        let inst = this.#map.get(key);
 
         if (inst) {
-            if (serv != null && args?.length) {
-                inst.service = serv;
+            if (origArgs?.length) {
                 inst.args = args;
+                inst.service = serv;
             }
             if (inst.invalid) {
                 this.invalidate(key);
             }
             return inst;
         }
-        this.#map.set(key, (inst = new ServiceDescriptor<TRegistry, any>(service, serv, args, true, isFn(serv))));
+        this.#map.set(key, (inst = new ServiceDescriptor<TRegistry, TService>(tkey, serv as any, args as any, true, isFn(serv))));
         return inst;
     }
     private has(key: CKey): boolean {
@@ -155,6 +132,7 @@ class Context<TRegistry extends RegistryType = Registry> {
 
         if (!ctx) {
             //I don't  think this should happen, but what do I know.
+            console.warn(`invalidate called on unknown key ${String(key)}`);
             return;
         }
         ctx.invalidate();
@@ -167,12 +145,9 @@ class Context<TRegistry extends RegistryType = Registry> {
             }
         }
     }
-    resolve<T extends PeaKey<TRegistry>>(
-        service: T,
-        ..._args: any[]
-    ): ValueOf<TRegistry, T> {
-        const descriptor = this.register(service as any, ..._args);
-        return descriptor.invoke();
+    resolve<TKey extends PeaKey<TRegistry>, TService extends Factory<TKey, TRegistry>>(tkey: TKey, ...args: [TService, ...PeaKeyRest<TService>] | PeaKeyRest<TService>): ValueOf<TRegistry, TKey> {
+
+        return this.register(tkey, ...args).invoke() as any;
     }
 
     newContext<TTRegistry extends TRegistry = TRegistry>() {
@@ -197,3 +172,20 @@ export function keyOf(key: PeaKey<any> | Service): CKey {
         ? (key[serviceSymbol] as any)
         : (key as any);
 }
+
+
+type Rest<T extends any[]> = T extends [any, ...infer U] ? U : [];
+
+type OfA<T> = (Constructor<T> | Fn<T> | T);
+//The second argument is usually a factory.  It could also be a value.   This tries to enforce if it is a factory, it should 
+// return the right type.   It is a little broken, because if the first argument is a factory (and key) than the second argument
+// should be treated like an argument.   Which seems asymetrical but is I think correct.
+type Factory<T, TRegistry extends RegistryType = Registry> = T extends undefined ? undefined : T extends PeaKeyType<infer TValue> ? OfA<TValue> :
+    T extends Constructor ? ConstructorParameters<T>[0] :
+    T extends Fn ? Parameters<T>[0] :
+    T extends keyof TRegistry ? OfA<TRegistry[T]> : never;
+
+
+type PeaKeyRest<T> = T extends Constructor ? Rest<ConstructorParameters<T>> :
+    T extends Fn ? Rest<Parameters<T>> :
+    [];

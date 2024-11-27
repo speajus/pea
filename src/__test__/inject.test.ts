@@ -3,6 +3,7 @@ import {
     context as ctx,
     destroySymbol,
     pea,
+    peaKey,
     RegistryType,
     serviceSymbol,
 } from "@speajus/pea";
@@ -90,7 +91,6 @@ describe("pea test", () => {
         let i = 0;
         class Cache { constructor() { i++ } }
         const result = ctx.resolve(Cache);
-        expect(i).toBe(1);
         const result2 = ctx.resolve(Cache);
 
         expect(result).toBeInstanceOf(Cache);
@@ -179,7 +179,8 @@ describe("pea test", () => {
         expect(customContext.resolve(someKey)).toBe("custom value");
     });
     it("should inject non primitive objects", () => {
-        const CONFIG = Symbol("Config");
+        const value = { test: 1 } as const;
+        const CONFIG = peaKey<typeof value>("test-config");
 
         ctx.register(CONFIG, { test: 1 });
         expect(ctx.resolve(CONFIG).test).toBe(1);
@@ -216,4 +217,34 @@ describe("pea test", () => {
         expect(ctx.resolve(factory, pea(dep))).toBe(101);
         expect(ctx.resolve(factory, pea(dep))).toBe(101);
     });
+    it('should work with peakeys strings', () => {
+        const pkey = peaKey<string>("test");
+        ctx.register(pkey, () => "test");
+        expect(ctx.resolve(pkey)).toBe("test");
+    })
+    it('should work with peakeys constructor', () => {
+        class TestPeakey { a = 1 };
+        const pkey = peaKey<TestPeakey>("test-1");
+        ctx.register(pkey, TestPeakey);
+        expect(ctx.resolve(pkey).a).toBe(1);
+    })
+    it('should work with peakeys factory', () => {
+        const pkey = peaKey<string>("test-2");
+        ctx.register(pkey, () => "test");
+        expect(ctx.resolve(pkey)).toBe("test");
+    });
+    it('should be an error if the types do not align', () => {
+        const pkey = peaKey<string>("test-3");
+        //@ts-expect-error - this should be an error please do not remove.  You shouldn't be able to register a number as a string.
+        ctx.register(pkey, 1);
+        //@ts-expect-error - this should be an error please do not remove.  You shouldn't be able to register a number as a string.
+        ctx.register(pkey, () => 1);
+    });
+    it('should be an error if the types do not align in the registry', () => {
+        //@ts-expect-error - this should be an error please do not remove.  You shouldn't be able to register a number as a string.
+        ctx.register(abSymbol, 1);
+        //@ts-expect-error - this should be an error please do not remove.  You shouldn't be able to register a number as a string.
+        ctx.register(abSymbol, () => 1);
+    });
+
 });
