@@ -1,13 +1,9 @@
 # [@speajus/pea](https://github.com/speajus/pea)
 
-A lightweight Dependency Injection (DI) framework for Node.js, based on proxies.
+A lightweight, proxy-based Dependency Injection (DI) framework for Node.js with full TypeScript support.
 
-## Overview
-
-Injection is a simple yet powerful DI framework designed to make dependency management in Node.js applications easier and more flexible. It leverages JavaScript proxies to provide a seamless integration experience.
-Some more examples can be found [here](https://github.com/speajus/spea-example/tree/main)
-
-**Note: This project is still a work in progress. APIs may change, and additional features are planned.**
+[![npm version](https://badge.fury.io/js/@speajus%2Fpea.svg)](https://www.npmjs.com/package/@speajus/pea)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
 
@@ -218,10 +214,6 @@ Resolves a service with the given arguments.
 Visits all dependencies of a service. This can be used to destroy all dependencies, or something, else. The
 return of `fn` becomes the new value of the dependency. As primitives do not have dependencies, they do not get visited.
 
-## Limitations
-
-When using factories as keys, the arguments are not resolved. This is because the factory is not a constructor, and the arguments are not passed to the factory. This is a limitation of the current API, we can not differentiate
-between trying to use a factory as a key, or trying to use a factory as a service. There would be no way to differentiate trying to replace the factory or trying register it. We may need to add additional API to support this.
 
 ## Invalidation
 
