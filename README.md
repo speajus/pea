@@ -143,13 +143,13 @@ Preliminary support is available for AsyncLocalStorage, it's highly inspired by
 . This is useful for things like user Auth in web apps. This code has no warranty or fitness
 garuntees, it is super mega **Experimental**.
 
-Note: You must import the `import "@speajus/pea/async"` somewhere in your module for this to work.  This is an attempt
-to prevent the need for complicated build configurations, when runnning in browser.  This module depends
+Note: You must import the `import "@speajus/pea/async"` somewhere in your module for this to work. This is an attempt
+to prevent the need for complicated build configurations, when runnning in browser. This module depends
 on `node:async_hooks` and will not work in the browser.
 
 ```ts
 //this extends context to add async support.
-import '@speajus/pea/async';
+import "@speajus/pea/async";
 
 const userSymbol = peaKey<User>("user");
 

@@ -33,7 +33,7 @@ export class AsyncScope {
 }
 
 export class AsyncVar<T> {
-  constructor(private readonly symbol: symbol) { }
+  constructor(private readonly symbol: symbol) {}
 
   set(value: T) {
     const scope = AsyncScope.get();
@@ -58,21 +58,23 @@ export class AsyncVar<T> {
   }
 }
 
-
 /**
-* Scoping allows for a variable to be scoped to a specific context.  This is
-* useful for things like database connections, or other resources that need to be
-* scoped to a specific context.   Note the requirement to use either a `Registry` key or
-* a `peaKey`.
-*
-* @param key - pkey or registry key
-* @returns
-*/
-const scoped = function <T extends RegistryType = Registry>(this: ContextImpl<T>, ...[key]: Parameters<ContextImpl<T>["scoped"]>) {
+ * Scoping allows for a variable to be scoped to a specific context.  This is
+ * useful for things like database connections, or other resources that need to be
+ * scoped to a specific context.   Note the requirement to use either a `Registry` key or
+ * a `peaKey`.
+ *
+ * @param key - pkey or registry key
+ * @returns
+ */
+const scoped: ContextImpl["scoped"] = function (this: ContextImpl, ...[key]) {
   const localStorage = new AsyncVar<ServiceDescriptor<any, any>>(key);
   const ckey = keyOf(key);
   const serviceDesc = this.get(ckey);
-  if (hasA(serviceDesc, serviceProxySymbol, isSymbol) && serviceDesc[serviceProxySymbol] !== ckey as any) {
+  if (
+    hasA(serviceDesc, serviceProxySymbol, isSymbol) &&
+    serviceDesc[serviceProxySymbol] !== (ckey as any)
+  ) {
     throw new PeaError(
       `key ${String(key)} already registered as '${String(serviceDesc[serviceProxySymbol])}', can not register a key into more than one scope`,
     );
@@ -124,6 +126,6 @@ const scoped = function <T extends RegistryType = Registry>(this: ContextImpl<T>
       );
     });
   };
-}
-ContextImpl.prototype.scoped = scoped as any;
+};
+ContextImpl.prototype.scoped = scoped;
 const serviceProxySymbol = Symbol("@pea/ServiceDescriptorProxy");
