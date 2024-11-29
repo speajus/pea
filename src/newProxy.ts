@@ -1,7 +1,7 @@
 import { PeaError } from "./guards";
 import type { Constructor } from "./types";
 
-export const proxyKey = Symbol("@@proxy-key");
+export const proxyKey = Symbol("@pea/proxy-key");
 
 export function newProxy<T extends Constructor>(
   key: unknown,
@@ -30,7 +30,8 @@ export function newProxy<T extends Constructor>(
             ? value.bind(prim)
             : value;
       }
-      return val == null ? val
+      return val == null
+        ? val
         : typeof (val as any)[prop] === "function"
           ? (val as any)[prop].bind(val)
           : (val as any)[prop];

@@ -1,10 +1,8 @@
-import { ServiceDescriptor } from "./ServiceDescriptor";
+import type { ServiceDescriptor } from "./ServiceDescriptor";
 import { destroySymbol, removeSymbol, serviceSymbol } from "./symbols";
 
 export type Constructor<T = any> = new (...args: any[]) => T;
 export type Fn<T = any> = (...args: any[]) => T;
-export type AwaitedReturnType<T extends Fn> = Awaited<ReturnType<T>>;
-
 
 //This is just a fake type to make key tracking easier.
 export type CKey = { __brand: "ContextKey" };
@@ -15,17 +13,11 @@ export type PeaKey<TRegistry extends RegistryType> =
   | Fn
   | keyof TRegistry;
 
-
-
 export interface Service<T extends symbol = symbol> {
   [serviceSymbol]: T;
 }
 
-export type ValueOf<
-  TRegistry extends RegistryType,
-  T,
-  K = unknown,
-> =
+export type ValueOf<TRegistry extends RegistryType, T, K = unknown> =
   T extends PeaKeyType<infer TValue>
   ? TValue
   : T extends Constructor
@@ -49,8 +41,6 @@ export type PrimitiveValue<T extends PrimitiveType> = T extends String
   ? bigint
   : never;
 
-
-
 export type VisitFn<
   TRegistry extends RegistryType,
   T extends PeaKey<TRegistry>,
@@ -62,8 +52,27 @@ export interface RegistryType {
   [key: symbol]: any;
 }
 
-
 export type PeaKeyType<T = any> = symbol & { [serviceSymbol]: T };
 export type Rest<T extends any[]> = T extends [any, ...infer U] ? U : [];
 
-export type OfA<T> = (Constructor<T> | Fn<T> | T);
+export type OfA<T> = Constructor<T> | Fn<T> | T;
+//The second argument is usually a factory.  It could also be a value.   This tries to enforce if it is a factory, it should
+// return the right type.   It is a little broken, because if the first argument is a factory (and key) than the second argument
+// should be treated like an argument.   Which seems asymetrical but is I think correct.
+
+export type ServiceArgs<TKey, TRegistry extends RegistryType> =
+  TKey extends PeaKeyType<infer TValue>
+  ? ParamArr<TValue>
+  : TKey extends keyof TRegistry
+  ? ParamArr<TRegistry[TKey]>
+  : TKey extends Constructor
+  ? ConstructorParameters<TKey>
+  : TKey extends Fn
+  ? Parameters<TKey>
+  : [];
+
+type ParamArr<
+  T,
+  TFn extends Fn<T> = Fn<T>,
+  TCon extends Constructor<T> = Constructor<T>,
+> = [TFn, ...Parameters<TFn>] | [TCon, ...ConstructorParameters<TCon>] | [T];

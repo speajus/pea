@@ -33,6 +33,7 @@
     "test": "vitest run",
     "build": "tsc",
     "watch": "tsc -w",
+    "prettier": "prettier --write .",
     "clean": "rm -rf dist"
   },
   "dependencies": {}

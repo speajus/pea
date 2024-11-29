@@ -13,7 +13,7 @@ export class EmailService {
   constructor(
     private authService = pea(authServiceSymbol),
     private dbService: IDBService = pea(DBService),
-  ) { }
+  ) {}
 
   async sendEmail(to: string, subject: string, body: string) {
     if (await this.authService.isAuthenticated()) {
