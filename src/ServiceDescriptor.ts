@@ -1,9 +1,9 @@
-import { keyOf } from "./context";
+import { keyOf } from "./util";
 import { has, isConstructor, isFn, PeaError } from "./guards";
 import { newProxy, proxyKey } from "./newProxy";
-import { Registry } from "./registry";
+import type { Registry } from "./registry";
 import { serviceSymbol } from "./symbols";
-import { CKey, Constructor, Fn, OfA, PeaKey, RegistryType } from "./types";
+import type { CKey, Constructor, Fn, OfA, PeaKey, RegistryType } from "./types";
 
 const EMPTY = [] as const;
 type EmptyTuple = typeof EMPTY;

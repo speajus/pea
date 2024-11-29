@@ -1,12 +1,12 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { hasA, isFn, isSymbol, PeaError } from "./guards";
-import { Context as ContextImpl, keyOf } from "./context";
-import type { PeaKeyType, RegistryType, ServiceArgs } from "./types";
-import type { Registry } from "./registry";
+import { Context } from "./context";
 import { ServiceDescriptor } from "./ServiceDescriptor";
+import { keyOf } from "./util";
 
 //borrowed from https://eytanmanor.medium.com/should-you-use-asynclocalstorage-2063854356bb
 const asyncLocalStorage = new AsyncLocalStorage<AsyncScope>();
+const serviceProxySymbol = Symbol("@pea/ServiceDescriptorProxy");
 
 export interface AsyncScope {
   [key: symbol]: unknown;
@@ -67,7 +67,7 @@ export class AsyncVar<T> {
  * @param key - pkey or registry key
  * @returns
  */
-const scoped: ContextImpl["scoped"] = function (this: ContextImpl, ...[key]) {
+const scoped: Context["scoped"] = function (this: Context, key) {
   const localStorage = new AsyncVar<ServiceDescriptor<any, any>>(key);
   const ckey = keyOf(key);
   const serviceDesc = this.get(ckey);
@@ -113,7 +113,7 @@ const scoped: ContextImpl["scoped"] = function (this: ContextImpl, ...[key]) {
     }),
   );
 
-  return (...[service, ...args]: any[]) => {
+  return (...[service, ...args]) => {
     new AsyncScope(() => {
       localStorage.set(
         new ServiceDescriptor<any, any>(
@@ -127,5 +127,4 @@ const scoped: ContextImpl["scoped"] = function (this: ContextImpl, ...[key]) {
     });
   };
 };
-ContextImpl.prototype.scoped = scoped;
-const serviceProxySymbol = Symbol("@pea/ServiceDescriptorProxy");
+Context.prototype.scoped = scoped;

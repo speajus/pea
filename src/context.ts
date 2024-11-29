@@ -1,7 +1,6 @@
 import { type Registry } from "./registry";
-import { hasA, isFn, isSymbol, PeaError } from "./guards";
+import { isFn, isSymbol, PeaError } from "./guards";
 import type {
-  Service,
   Constructor,
   ValueOf,
   Fn,
@@ -13,7 +12,7 @@ import type {
   PeaKeyType,
 } from "./types";
 import { ServiceDescriptor } from "./ServiceDescriptor";
-import { serviceSymbol } from "./symbols";
+import { keyOf } from "./util";
 
 export interface Context<TRegistry extends RegistryType = Registry> {
   register<TKey extends PeaKey<TRegistry>>(
@@ -82,6 +81,7 @@ export class Context<TRegistry extends RegistryType = Registry>
       throw new PeaError("invalid arguments");
     }
   }
+
   private _visit(
     service: CKey,
     fn: VisitFn<TRegistry, any>,
@@ -100,26 +100,19 @@ export class Context<TRegistry extends RegistryType = Registry>
       fn(ctx);
     }
   }
+
   protected get(key: CKey): ServiceDescriptor<TRegistry, any> | undefined {
     return this.map.get(key) ?? this.parent?.get(key);
   }
+
   protected has(key: CKey): boolean {
     return this.map.has(key) ?? this.parent?.has(key) ?? false;
   }
+
   protected set(key: CKey, value: ServiceDescriptor<TRegistry, any>) {
     this.map.set(key, value);
   }
-  // protected ctx(
-  //     k: CKey,
-  //     defaults?: ServiceDescriptor<TRegistry, any>,
-  // ): ServiceDescriptor<TRegistry, any> {
-  //     let ret = this.map.get(k) ?? this.parent?.ctx(k);
-  //     if (!ret) {
-  //         ret = defaults ?? new ServiceDescriptor(k as any);
-  //         this.map.set(k, ret);
-  //     }
-  //     return ret;
-  // }
+
   private invalidate(
     key: CKey,
     ctx?: ServiceDescriptor<TRegistry, any>,
@@ -207,9 +200,3 @@ export function createNewContext<TRegistry extends RegistryType>() {
 export const context = createNewContext<Registry>();
 
 export const pea = context.pea.bind(context);
-
-export function keyOf(key: PeaKey<any> | Service): CKey {
-  return hasA(key, serviceSymbol, isSymbol)
-    ? (key[serviceSymbol] as any)
-    : (key as any);
-}
