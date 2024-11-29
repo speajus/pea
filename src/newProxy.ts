@@ -1,7 +1,7 @@
 import { PeaError } from "./guards";
 import type { Constructor } from "./types";
 
-export const proxyKey = Symbol("@@proxy-key");
+export const proxyKey = Symbol("@pea/proxy-key");
 
 export function newProxy<T extends Constructor>(
   key: unknown,
