@@ -10,6 +10,7 @@ import type {
     CKey,
     RegistryType,
     ServiceArgs,
+    PeaKeyType,
 } from "./types";
 import { ServiceDescriptor } from "./ServiceDescriptor";
 import { serviceSymbol } from "./symbols";
@@ -39,7 +40,7 @@ export class Context<TRegistry extends RegistryType = Registry> implements Conte
     pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
     pea(service: unknown): unknown {
         return (
-            this.map.get(keyOf(service as any)) ?? this.register(service as any)
+            this.get(keyOf(service as any)) ?? this.register(service as any)
         ).proxy;
     }
 
@@ -88,29 +89,36 @@ export class Context<TRegistry extends RegistryType = Registry> implements Conte
         if (seen.size === seen.add(service).size) {
             return;
         }
-        const ctx = this.ctx(service);
-        if (ctx.dependencies?.size) {
-            for (const dep of ctx.dependencies) {
-                this._visit(dep, fn, seen);
+        const ctx = this.get(service);
+        if (ctx) {
+            if (ctx.dependencies?.size) {
+                for (const dep of ctx.dependencies) {
+                    this._visit(dep, fn, seen);
+                }
             }
+            fn(ctx);
         }
-        fn(ctx);
     }
-
+    protected get(key: CKey): ServiceDescriptor<TRegistry, any> | undefined {
+        return this.map.get(key) ?? this.parent?.get(key);
+    }
     protected has(key: CKey): boolean {
         return this.map.has(key) ?? this.parent?.has(key) ?? false;
     }
-    protected ctx(
-        k: CKey,
-        defaults?: ServiceDescriptor<TRegistry, any>,
-    ): ServiceDescriptor<TRegistry, any> {
-        let ret = this.map.get(k) ?? this.parent?.ctx(k);
-        if (!ret) {
-            ret = defaults ?? new ServiceDescriptor(k as any);
-            this.map.set(k, ret);
-        }
-        return ret;
+    protected set(key: CKey, value: ServiceDescriptor<TRegistry, any>) {
+        this.map.set(key, value);
     }
+    // protected ctx(
+    //     k: CKey,
+    //     defaults?: ServiceDescriptor<TRegistry, any>,
+    // ): ServiceDescriptor<TRegistry, any> {
+    //     let ret = this.map.get(k) ?? this.parent?.ctx(k);
+    //     if (!ret) {
+    //         ret = defaults ?? new ServiceDescriptor(k as any);
+    //         this.map.set(k, ret);
+    //     }
+    //     return ret;
+    // }
     private invalidate(
         key: CKey,
         ctx?: ServiceDescriptor<TRegistry, any>,
@@ -182,7 +190,11 @@ export class Context<TRegistry extends RegistryType = Registry> implements Conte
     newContext<TTRegistry extends TRegistry = TRegistry>() {
         return new Context<TTRegistry>(this);
     }
-
+    scoped<TKey extends PeaKeyType | (keyof TRegistry & symbol)>(
+        _key: TKey,
+    ): (...args: ServiceArgs<TKey, TRegistry>) => void {
+        throw new PeaError("async not enabled, please add 'import \"@speajus/pea/async\";' to your module to enable async support");
+    }
 
 }
 

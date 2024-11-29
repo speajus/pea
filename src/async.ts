@@ -1,17 +1,10 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { isFn, PeaError } from "./guards";
+import { hasA, isFn, isSymbol, PeaError } from "./guards";
 import { Context as ContextImpl, keyOf } from "./context";
 import type { PeaKeyType, RegistryType, ServiceArgs } from "./types";
 import type { Registry } from "./registry";
 import { ServiceDescriptor } from "./ServiceDescriptor";
 
-declare module "./context" {
-  export interface Context<TRegistry extends RegistryType = Registry> {
-    scoped<TKey extends PeaKeyType | (keyof TRegistry & symbol)>(
-      key: TKey,
-    ): (...args: ServiceArgs<TKey, TRegistry>) => void;
-  }
-}
 //borrowed from https://eytanmanor.medium.com/should-you-use-asynclocalstorage-2063854356bb
 const asyncLocalStorage = new AsyncLocalStorage<AsyncScope>();
 
@@ -75,18 +68,22 @@ export class AsyncVar<T> {
 * @param key - pkey or registry key
 * @returns
 */
-ContextImpl.prototype.scoped = function (key) {
+const scoped = function <T extends RegistryType = Registry>(this: ContextImpl<T>, ...[key]: Parameters<ContextImpl<T>["scoped"]>) {
   const localStorage = new AsyncVar<ServiceDescriptor<any, any>>(key);
   const ckey = keyOf(key);
-  if (this.has(ckey)) {
+  const serviceDesc = this.get(ckey);
+  if (hasA(serviceDesc, serviceProxySymbol, isSymbol) && serviceDesc[serviceProxySymbol] !== ckey as any) {
     throw new PeaError(
-      `key ${String(key)} already registered, can not register a key into more than one scope`,
+      `key ${String(key)} already registered as '${String(serviceDesc[serviceProxySymbol])}', can not register a key into more than one scope`,
     );
   }
   this.map.set(
     ckey,
-    new Proxy(new ServiceDescriptor(key), {
+    new Proxy(serviceDesc ?? new ServiceDescriptor(key), {
       get(target, prop) {
+        if (prop === serviceProxySymbol) {
+          return ckey;
+        }
         if (prop === "invoke") {
           return () => {
             if (!localStorage.exists()) {
@@ -114,7 +111,7 @@ ContextImpl.prototype.scoped = function (key) {
     }),
   );
 
-  return (...[service, ...args]) => {
+  return (...[service, ...args]: any[]) => {
     new AsyncScope(() => {
       localStorage.set(
         new ServiceDescriptor<any, any>(
@@ -128,3 +125,5 @@ ContextImpl.prototype.scoped = function (key) {
     });
   };
 }
+ContextImpl.prototype.scoped = scoped as any;
+const serviceProxySymbol = Symbol("@pea/ServiceDescriptorProxy");
