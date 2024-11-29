@@ -43,9 +43,7 @@ export function newProxy<T extends Constructor>(
       return Object.keys(instance());
     },
     getPrototypeOf: () => {
-      const v = instance();
-      const proto = Object.getPrototypeOf(v);
-      return proto;
+      return Object.getPrototypeOf(instance());
     },
   });
 }

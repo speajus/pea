@@ -1,4 +1,3 @@
-import { isProxy } from "util/types";
 import { keyOf } from "./context";
 import { has, isConstructor, isFn, isPea, PeaError } from "./guards";
 import { newProxy, proxyKey } from "./newProxy";
@@ -59,7 +58,7 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
 
     }
 
-    get proxy() {
+    get proxy(): Returns<T> {
         const key = keyOf(this[serviceSymbol]);
         ServiceDescriptor.#dependencies.add(key);
         return (this._proxy ??= newProxy(key, this.invoke));
@@ -91,7 +90,7 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
     }
 
     get service() {
-        return this._service as any;
+        return this._service as OfA<T>;
     }
 
     get args() {
@@ -103,17 +102,17 @@ export class ServiceDescriptor<TRegistry extends RegistryType, T extends Constru
          * If the args are the same, we don't need to invalidate.  Also
          * if the value hasn't been invoked, we don't need to invalidate.
          */
-        // if (newArgs === this._args || (this._args?.length === newArgs.length &&
-        //     this._args.every((v, i) => v === newArgs[i] && !isPea(v)))) {
-        //     return;
-        // }
+        //if (newArgs === this._args || (this._args?.length === newArgs.length &&
+        // this._args.every((v, i) => v === newArgs[i] && !isPea(v)))) {
+        // return;
+        //}
         if (this.invoked) {
             this.invalid = true;
         }
         this.invalidate();
         newArgs.forEach(arg => {
             if (has(arg, proxyKey)) {
-                this.addDependency((arg as any)[proxyKey]);
+                this.addDependency(arg[proxyKey] as CKey);
             }
         });
         this._args = newArgs;
