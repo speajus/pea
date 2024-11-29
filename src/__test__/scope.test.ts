@@ -1,12 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { context, pea, peaKey } from "../index";
+import '../async';
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 describe("scope", () => {
   it("should maintain separate values across async operations", async () => {
     const scopedKey = peaKey<string>("async-scoped-value");
 
     class ScopedValue {
-      constructor(public value: string = pea(scopedKey)) {}
+      constructor(public value: string = pea(scopedKey)) { }
     }
     const sv = pea(ScopedValue);
     const scopeHandler = context.scoped(scopedKey);

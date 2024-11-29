@@ -9,22 +9,37 @@ import type {
     PeaKey,
     CKey,
     RegistryType,
-    PeaKeyType,
+    ServiceArgs,
 } from "./types";
 import { ServiceDescriptor } from "./ServiceDescriptor";
 import { serviceSymbol } from "./symbols";
-import { AsyncScope, AsyncVar } from "./AsyncContext";
 
-export type ContextType = InstanceType<typeof Context>;
-
-export class Context<TRegistry extends RegistryType = Registry> {
+export interface Context<TRegistry extends RegistryType = Registry> {
+    register<TKey extends PeaKey<TRegistry>>(
+        tkey: TKey,
+        ...args: ServiceArgs<TKey, TRegistry> | []
+    ): ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>;
+    resolve<TKey extends PeaKey<TRegistry>>(
+        tkey: TKey,
+        ...args: ServiceArgs<TKey, TRegistry> | []
+    ): ValueOf<TRegistry, TKey>;
+    newContext<TTRegistry extends TRegistry = TRegistry>(): Context<TTRegistry>;
+    pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
+    pea(service: unknown): unknown;
+    visit(fn: VisitFn<TRegistry, any>): void;
+    visit<T extends PeaKey<TRegistry>>(
+        service: T,
+        fn: VisitFn<TRegistry, T>,
+    ): void;
+}
+export class Context<TRegistry extends RegistryType = Registry> implements Context<TRegistry> {
     //this thing is used to keep track of dependencies.
-    #map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
+    protected map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
     constructor(private readonly parent?: Context<any>) { }
     pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
     pea(service: unknown): unknown {
         return (
-            this.#map.get(keyOf(service as any)) ?? this.register(service as any)
+            this.map.get(keyOf(service as any)) ?? this.register(service as any)
         ).proxy;
     }
 
@@ -58,7 +73,7 @@ export class Context<TRegistry extends RegistryType = Registry> {
         if (isFn(fn)) {
             this._visit(key, fn as any);
         } else if (isFn(service)) {
-            for (const key of this.#map.keys()) {
+            for (const key of this.map.keys()) {
                 this._visit(key, service as VisitFn<TRegistry, any>);
             }
         } else {
@@ -82,17 +97,17 @@ export class Context<TRegistry extends RegistryType = Registry> {
         fn(ctx);
     }
 
-    private has(key: CKey): boolean {
-        return this.#map.has(key) ?? this.parent?.has(key) ?? false;
+    protected has(key: CKey): boolean {
+        return this.map.has(key) ?? this.parent?.has(key) ?? false;
     }
-    private ctx(
+    protected ctx(
         k: CKey,
         defaults?: ServiceDescriptor<TRegistry, any>,
     ): ServiceDescriptor<TRegistry, any> {
-        let ret = this.#map.get(k) ?? this.parent?.ctx(k);
+        let ret = this.map.get(k) ?? this.parent?.ctx(k);
         if (!ret) {
-            ret = defaults ?? ServiceDescriptor.value(k as any, k);
-            this.#map.set(k, ret);
+            ret = defaults ?? new ServiceDescriptor(k as any);
+            this.map.set(k, ret);
         }
         return ret;
     }
@@ -104,7 +119,7 @@ export class Context<TRegistry extends RegistryType = Registry> {
         if (seen.size === seen.add(key).size) {
             return;
         }
-        ctx = ctx ?? this.#map.get(key);
+        ctx = ctx ?? this.map.get(key);
 
         if (!ctx) {
             //I don't  think this should happen, but what do I know.
@@ -113,7 +128,7 @@ export class Context<TRegistry extends RegistryType = Registry> {
         }
         ctx.invalidate();
 
-        for (const [k, v] of this.#map) {
+        for (const [k, v] of this.map) {
             if (v.hasDependency(key)) {
                 this.invalidate(k, v, seen);
             }
@@ -132,7 +147,7 @@ export class Context<TRegistry extends RegistryType = Registry> {
             serv = args.shift();
         }
 
-        let inst = this.#map.get(key);
+        let inst = this.map.get(key);
 
         if (inst) {
             if (origArgs?.length) {
@@ -144,7 +159,7 @@ export class Context<TRegistry extends RegistryType = Registry> {
             }
             return inst;
         }
-        this.#map.set(
+        this.map.set(
             key,
             (inst = new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(
                 tkey,
@@ -168,68 +183,7 @@ export class Context<TRegistry extends RegistryType = Registry> {
         return new Context<TTRegistry>(this);
     }
 
-    /**
-     * Scoping allows for a variable to be scoped to a specific context.  This is
-     * useful for things like database connections, or other resources that need to be
-     * scoped to a specific context.   Note the requirement to use either a `Registry` key or
-     * a `peaKey`.
-     *
-     * @param key - pkey or registry key
-     * @returns
-     */
-    scoped<TKey extends PeaKeyType | (keyof TRegistry & symbol)>(key: TKey) {
-        const localStorage = new AsyncVar<ServiceDescriptor<TRegistry, TKey>>(key);
-        const ckey = keyOf(key);
-        if (this.#map.has(ckey)) {
-            throw new PeaError(
-                `key ${String(key)} already registered, can not register a key into more than one scope`,
-            );
-        }
-        this.#map.set(
-            ckey,
-            new Proxy(this.register(key), {
-                get(target, prop) {
-                    if (prop === "invoke") {
-                        return () => {
-                            if (!localStorage.exists()) {
-                                throw new PeaError(
-                                    `scope ${String(key)} not found accessing '${prop}'}`,
-                                );
-                            }
-                            return localStorage.get().invoke();
-                        };
-                    }
-                    return Reflect.get(target, prop);
-                },
-                set(target, prop, value) {
-                    if (prop === "proxy") {
-                        return Reflect.set(target, prop, value);
-                    }
-                    if (!localStorage.exists()) {
-                        throw new PeaError(
-                            `scope ${String(key)} not found setting '${String(prop)}'`,
-                        );
-                    }
 
-                    return Reflect.set(localStorage.get(), prop, value);
-                },
-            }),
-        );
-
-        return (...[service, ...args]: ServiceArgs<TKey, TRegistry>) => {
-            new AsyncScope(() => {
-                localStorage.set(
-                    new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(
-                        key,
-                        service,
-                        args as any,
-                        false,
-                        isFn(service),
-                    ),
-                );
-            });
-        };
-    }
 }
 
 export function createNewContext<TRegistry extends RegistryType>() {
@@ -246,23 +200,4 @@ export function keyOf(key: PeaKey<any> | Service): CKey {
         : (key as any);
 }
 
-//The second argument is usually a factory.  It could also be a value.   This tries to enforce if it is a factory, it should
-// return the right type.   It is a little broken, because if the first argument is a factory (and key) than the second argument
-// should be treated like an argument.   Which seems asymetrical but is I think correct.
 
-type ServiceArgs<TKey, TRegistry extends RegistryType = Registry> =
-    TKey extends PeaKeyType<infer TValue>
-    ? ParamArr<TValue>
-    : TKey extends keyof TRegistry
-    ? ParamArr<TRegistry[TKey]>
-    : TKey extends Constructor
-    ? ConstructorParameters<TKey>
-    : TKey extends Fn
-    ? Parameters<TKey>
-    : [];
-
-type ParamArr<
-    T,
-    TFn extends Fn<T> = Fn<T>,
-    TCon extends Constructor<T> = Constructor<T>,
-> = [TFn, ...Parameters<TFn>] | [TCon, ...ConstructorParameters<TCon>] | [T];

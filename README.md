@@ -13,7 +13,7 @@ Some more examples can be found [here](https://github.com/speajus/spea-example/t
 
 - Lightweight nearly everything is done with `peaKey`, `context.register`, `context.resolve` and `pea`.
 - Proxy-based lazy loading of dependencies
-- No (runtime) dependencies
+- No (runtime) dependencies (other than `node:async_hooks`)
 - Type-safe and fully typed
 - Not based on decorators.
 - Constructor injection
@@ -141,9 +141,16 @@ userService.getUsers(); // Outputs: Connected to database
 Preliminary support is available for AsyncLocalStorage, it's highly inspired by
 [AsyncVars](https://eytanmanor.medium.com/should-you-use-asynclocalstorage-2063854356bb)
 . This is useful for things like user Auth in web apps. This code has no warranty or fitness
-garuntees, it is **Experimental**.
+garuntees, it is super mega **Experimental**.
+
+Note: You must import the `import "@speajus/pea/async"` somewhere in your module for this to work.  This is an attempt
+to prevent the need for complicated build configurations, when runnning in browser.  This module depends
+on `node:async_hooks` and will not work in the browser.
 
 ```ts
+//this extends context to add async support.
+import '@speajus/pea/async';
+
 const userSymbol = peaKey<User>("user");
 
 class AuthService {
