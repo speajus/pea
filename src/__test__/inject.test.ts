@@ -247,6 +247,11 @@ describe("pea test", () => {
         class TestAlot {
             constructor(readonly a: number, public b: string, public c: string, public d: string) { }
         }
+        const result = ctx.resolve(TestAlot, 2, "b", "c", "d");
+        expect(result.a == 2).toBe(true);
+        expect(result.b == "b").toBe(true);
+        expect(result.c == "c").toBe(true);
+        expect(result.d == "d").toBe(true);
     });
 
     it('should be an error if the types do not align', () => {
@@ -263,4 +268,21 @@ describe("pea test", () => {
         ctx.register(abSymbol, () => 1);
     });
 
+
 });
+
+describe('proxy', () => {
+    it('should work with proxy', () => {
+        const pkey = peaKey<string>("test-3");
+        const resp = ctx.register(pkey, () => "test");
+        expect(resp.proxy == "test").toBe(true);
+    });
+    it('should work with proxy', () => {
+        class PA {
+            public a = 1;
+        }
+        const resp = ctx.register(PA).proxy;
+        expect(resp.a).toBe(1);
+    });
+
+})
