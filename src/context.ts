@@ -162,13 +162,19 @@ export class Context<TRegistry extends RegistryType = Registry> {
     /**
      * Scoping allows for a variable to be scoped to a specific context.  This is
      * useful for things like database connections, or other resources that need to be
-     * scoped to a specific context.  
-     * @param key 
+     * scoped to a specific context.   Note the requirement to use either a `Registry` key or
+     * a `peaKey`.  
+     * 
+     * @param key - pkey or registry key
      * @returns 
      */
     scoped<TKey extends (PeaKeyType | keyof TRegistry & symbol)>(key: TKey) {
         const localStorage = new AsyncVar<ServiceDescriptor<TRegistry, TKey>>(key);
-        this.#map.set(keyOf(key), new Proxy(this.register(key), {
+        const ckey = keyOf(key);
+        if (this.#map.has(ckey)) {
+            throw new PeaError(`key ${String(key)} already registered, can not register a key into more than one scope`);
+        }
+        this.#map.set(ckey, new Proxy(this.register(key), {
             get(target, prop) {
                 if (prop === "invoke") {
                     return () => {
@@ -193,9 +199,9 @@ export class Context<TRegistry extends RegistryType = Registry> {
         }));
 
 
-        return (...[first, ...rest]: ServiceArgs<TKey, TRegistry>) => {
+        return (...[service, ...args]: ServiceArgs<TKey, TRegistry>) => {
             new AsyncScope(() => {
-                localStorage.set(new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(key, first, rest as any, false, isFn(first)));
+                localStorage.set(new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(key, service, args as any, false, isFn(first)));
             });
         }
     }
