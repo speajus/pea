@@ -1,43 +1,36 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "request": "launch",
+      "name": "Launch Program",
+      "skipFiles": ["<node_internals>/**"],
+      "runtimeExecutable": "/Users/justinspears/.nvm/versions/node/v22.7.0/bin/node",
 
-
-
-        {
-            "request": "launch",
-            "name": "Launch Program",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "runtimeExecutable": "/Users/justinspears/.nvm/versions/node/v22.7.0/bin/node",
-           
-            "env": {
-                "PATH": "${env:PATH}:${workspaceFolder}/node_modules/.bin:/Users/justinspears/.nvm/versions/node/v22.7.0/bin/"
-            },
-            "runtimeArgs": ["vitest"],
-            "type": "node",
-            "program": "${workspaceFolder}/src/__test__/*.test.ts",
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ]
-        },
-        {
-            "name": "Launch Vite DEV server",
-            "request": "launch",
-            "runtimeExecutable": "/Users/justinspears/injection/node_modules/.bin/vitest",
-            "env": {
-                "PATH": "${env:PATH}:${workspaceFolder}/node_modules/.bin:/Users/justinspears/.nvm/versions/node/v22.7.0/bin/"
-            },
-            "type": "node",
-            // "serverReadyAction": {
-            //   "action": "debugWithChrome",
-            //   "pattern": "Local: http://localhost:([0-9]+)",
-            //   "uriFormat": "http://localhost:%s"
-            // }
-          },
-    ]
+      "env": {
+        "PATH": "${env:PATH}:${workspaceFolder}/node_modules/.bin:/Users/justinspears/.nvm/versions/node/v22.7.0/bin/"
+      },
+      "runtimeArgs": ["vitest"],
+      "type": "node",
+      "program": "${workspaceFolder}/src/__test__/*.test.ts",
+      "outFiles": ["${workspaceFolder}/**/*.js"]
+    },
+    {
+      "name": "Launch Vite DEV server",
+      "request": "launch",
+      "runtimeExecutable": "/Users/justinspears/injection/node_modules/.bin/vitest",
+      "env": {
+        "PATH": "${env:PATH}:${workspaceFolder}/node_modules/.bin:/Users/justinspears/.nvm/versions/node/v22.7.0/bin/"
+      },
+      "type": "node"
+      // "serverReadyAction": {
+      //   "action": "debugWithChrome",
+      //   "pattern": "Local: http://localhost:([0-9]+)",
+      //   "uriFormat": "http://localhost:%s"
+      // }
+    }
+  ]
 }

@@ -5,5 +5,5 @@ export const destroySymbol = Symbol("destroy");
 export const removeSymbol = Symbol("remove");
 
 export const peaKey = <T>(name: string): PeaKeyType<T> => {
-    return Symbol(name) as any;
-}
+  return Symbol(name) as any;
+};

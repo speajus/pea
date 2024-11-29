@@ -30,7 +30,8 @@ export function newProxy<T extends Constructor>(
             ? value.bind(prim)
             : value;
       }
-      return val == null ? val
+      return val == null
+        ? val
         : typeof (val as any)[prop] === "function"
           ? (val as any)[prop].bind(val)
           : (val as any)[prop];

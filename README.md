@@ -12,18 +12,18 @@ Some more examples can be found [here](https://github.com/speajus/spea-example/t
 ## Features
 
 - Lightweight nearly everything is done with `peaKey`, `context.register`, `context.resolve` and `pea`.
-- Proxy-based lazy loading of dependencies 
+- Proxy-based lazy loading of dependencies
 - No (runtime) dependencies
 - Type-safe and fully typed
 - Not based on decorators.
 - Constructor injection
 - Factory injection
 - Primitive injection
-- Caching 
+- Caching
 
 ## Dependencies and Requirements
-This has no runtime dependencies.  It also works with most modern JS runtimes.
 
+This has no runtime dependencies. It also works with most modern JS runtimes.
 
 ## Installation
 
@@ -42,12 +42,12 @@ yarn add @speajus/pea
 Here's a simple example of how to use Injection:
 
 ```typescript
-import { pea, context } from '@speajus/pea';
+import { pea, context } from "@speajus/pea";
 
 // Define a service
 class DatabaseService {
   connect() {
-    console.log('Connected to database');
+    console.log("Connected to database");
   }
 }
 
@@ -72,11 +72,12 @@ userService.getUsers(); // Outputs: Connected to database
 
 You can use symbols to register and retrieve services, please use the `peaKey` symbols,
 as they provide type safety and do not require any additional configuration.
+
 ```ts
-import { pea, context, peaKey } from '@speajus/pea';
+import { pea, context, peaKey } from "@speajus/pea";
 class DatabaseService {
   connect() {
-    console.log('Connected to database');
+    console.log("Connected to database");
   }
 }
 const dbService = peaKey<DatabaseService>("db-service");
@@ -135,56 +136,52 @@ const userService = context.resolve(UserService);
 userService.getUsers(); // Outputs: Connected to database
 ```
 
-
 ## AsyncLocal Storage usage
-Preliminary support is available for AsyncLocalStorage, it's highly inspired by 
+
+Preliminary support is available for AsyncLocalStorage, it's highly inspired by
 [AsyncVars](https://eytanmanor.medium.com/should-you-use-asynclocalstorage-2063854356bb)
-.  This is useful for things like user Auth in web apps.   This code has no warranty or fitness
+. This is useful for things like user Auth in web apps. This code has no warranty or fitness
 garuntees, it is **Experimental**.
 
-
 ```ts
-
 const userSymbol = peaKey<User>("user");
 
 class AuthService {
   constructor(private user = pea(userSymbol)) {}
- 
+
   isAuthenticated() {
     return this.user != null;
   }
   hasRole(role: string) {
     return this.user?.roles.includes(role);
   }
-  
 }
 const requestScoped = context.scoped(userSymbol);
 const app = express();
 app.use((req, res, next) => {
-    requestScoped(req.user);
-    next();
+  requestScoped(req.user);
+  next();
 });
-
 ```
 
-
 ## API Reference
+
 ### pea(service, type?)
 
-Returns a proxy for the given service.  If the service is a symbol, the type can be used to specify the type of the service.  Symbols should be registered with the context.  For example:
+Returns a proxy for the given service. If the service is a symbol, the type can be used to specify the type of the service. Symbols should be registered with the context. For example:
 
 ```typescript
-const dbService = Symbol('DatabaseService');
+const dbService = Symbol("DatabaseService");
 
 class DatabaseService {
   connect() {
-    console.log('Connected to database');
+    console.log("Connected to database");
   }
 }
 declare module "@speajus/pea" {
-    export interface Registry {
-        [dbService]: InstanceOf<typeof DatabaseService>;
-    }
+  export interface Registry {
+    [dbService]: InstanceOf<typeof DatabaseService>;
+  }
 }
 
 context.register(dbService, DatabaseService);
@@ -212,20 +209,21 @@ Resolves a service with the given arguments.
 ### context.visit(service, fn)
 
 Visits all dependencies of a service. This can be used to destroy all dependencies, or something, else. The
-return of `fn` becomes the new value of the dependency. As primitives do not have dependencies, they do not get visited.   
-
+return of `fn` becomes the new value of the dependency. As primitives do not have dependencies, they do not get visited.
 
 ## Limitations
-When using factories as keys, the arguments are not resolved.  This is because the factory is not a constructor, and the arguments are not passed to the factory.  This is a limitation of the current API, we can not differentiate
-between trying to use a factory as a key, or trying to use a factory as a service.  There would be no way to differentiate trying to replace the factory or trying register it.  We may need to add additional API to support this.
+
+When using factories as keys, the arguments are not resolved. This is because the factory is not a constructor, and the arguments are not passed to the factory. This is a limitation of the current API, we can not differentiate
+between trying to use a factory as a key, or trying to use a factory as a service. There would be no way to differentiate trying to replace the factory or trying register it. We may need to add additional API to support this.
 
 ## Invalidation
-When a service is registered, all service that depend on it are invalidated.  This means that all dependencies are resolved again.  This is done to ensure that all dependencies are up to date. 
- This is done by keeping track of all dependencies.  
+
+When a service is registered, all service that depend on it are invalidated. This means that all dependencies are resolved again. This is done to ensure that all dependencies are up to date.
+This is done by keeping track of all dependencies.
 
 ## Caching
-Values are cached in the context. If at some point the value is changed, all services that depend on it are invalidated.  This is done by keeping track of all dependencies.  
 
+Values are cached in the context. If at some point the value is changed, all services that depend on it are invalidated. This is done by keeping track of all dependencies.
 
 ## Roadmap
 

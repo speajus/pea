@@ -6,7 +6,7 @@ describe("scope", () => {
     const scopedKey = peaKey<string>("async-scoped-value");
 
     class ScopedValue {
-      constructor(public value: string = pea(scopedKey)) { }
+      constructor(public value: string = pea(scopedKey)) {}
     }
     const sv = pea(ScopedValue);
     const scopeHandler = context.scoped(scopedKey);
@@ -27,16 +27,10 @@ describe("scope", () => {
         expect(sv.value == "value2").toBe(true);
         await wait(100);
         expect(sv.value == "value2").toBe(true);
-
-      }
-
-
+      },
     ]);
-
 
     // Verify that accessing outside of any scope throws an error
     expect(() => context.resolve(scopedKey)).toThrow();
   });
-
-
 });

@@ -1,10 +1,5 @@
 import { type Registry } from "./registry";
-import {
-    hasA,
-    isFn,
-    isSymbol,
-    PeaError,
-} from "./guards";
+import { hasA, isFn, isSymbol, PeaError } from "./guards";
 import type {
     Service,
     Constructor,
@@ -15,46 +10,41 @@ import type {
     CKey,
     RegistryType,
     PeaKeyType,
-    OfA,
-    Rest,
 } from "./types";
 import { ServiceDescriptor } from "./ServiceDescriptor";
 import { serviceSymbol } from "./symbols";
-import { AsyncLocalStorage } from "async_hooks";
-import { AsyncScope, AsyncVar } from "./AsyncVar";
+import { AsyncScope, AsyncVar } from "./AsyncContext";
 
 export type ContextType = InstanceType<typeof Context>;
 
 export class Context<TRegistry extends RegistryType = Registry> {
-
     //this thing is used to keep track of dependencies.
     #map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
     constructor(private readonly parent?: Context<any>) { }
     pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
-    pea(
-        service: unknown,
-    ): unknown {
-
-        return (this.#map.get(keyOf(service as any)) ?? this.register(service as any)).proxy;
+    pea(service: unknown): unknown {
+        return (
+            this.#map.get(keyOf(service as any)) ?? this.register(service as any)
+        ).proxy;
     }
 
     /**
-       * Starting at a service, apply a function to all dependencies.  This is
-       * useful if you want to destroy all dependencies.   This also could be
-       * used for trigger init methods.  It will only visit each dependency once.
-       *
-       *
-       * ```typescript
-       *   context.visit(EmailService, (v)=>{
-       *     v.destroy?.();
-       *     return removeSymbol;
-       *   });
-       *
-       * ```
-       *
-       * @param service
-       * @param fn
-       */
+     * Starting at a service, apply a function to all dependencies.  This is
+     * useful if you want to destroy all dependencies.   This also could be
+     * used for trigger init methods.  It will only visit each dependency once.
+     *
+     *
+     * ```typescript
+     *   context.visit(EmailService, (v)=>{
+     *     v.destroy?.();
+     *     return removeSymbol;
+     *   });
+     *
+     * ```
+     *
+     * @param service
+     * @param fn
+     */
     visit(fn: VisitFn<TRegistry, any>): void;
     visit<T extends PeaKey<TRegistry>>(
         service: T,
@@ -95,7 +85,10 @@ export class Context<TRegistry extends RegistryType = Registry> {
     private has(key: CKey): boolean {
         return this.#map.has(key) ?? this.parent?.has(key) ?? false;
     }
-    private ctx(k: CKey, defaults?: ServiceDescriptor<TRegistry, any>): ServiceDescriptor<TRegistry, any> {
+    private ctx(
+        k: CKey,
+        defaults?: ServiceDescriptor<TRegistry, any>,
+    ): ServiceDescriptor<TRegistry, any> {
         let ret = this.#map.get(k) ?? this.parent?.ctx(k);
         if (!ret) {
             ret = defaults ?? ServiceDescriptor.value(k as any, k);
@@ -103,7 +96,11 @@ export class Context<TRegistry extends RegistryType = Registry> {
         }
         return ret;
     }
-    private invalidate(key: CKey, ctx?: ServiceDescriptor<TRegistry, any>, seen = new Set<CKey>()) {
+    private invalidate(
+        key: CKey,
+        ctx?: ServiceDescriptor<TRegistry, any>,
+        seen = new Set<CKey>(),
+    ) {
         if (seen.size === seen.add(key).size) {
             return;
         }
@@ -117,14 +114,15 @@ export class Context<TRegistry extends RegistryType = Registry> {
         ctx.invalidate();
 
         for (const [k, v] of this.#map) {
-            if (
-                v.hasDependency(key)
-            ) {
+            if (v.hasDependency(key)) {
                 this.invalidate(k, v, seen);
             }
         }
     }
-    register<TKey extends PeaKey<TRegistry>>(tkey: TKey, ...origArgs: ServiceArgs<TKey, TRegistry> | []): ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>> {
+    register<TKey extends PeaKey<TRegistry>>(
+        tkey: TKey,
+        ...origArgs: ServiceArgs<TKey, TRegistry> | []
+    ): ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>> {
         const key = keyOf(tkey);
 
         let serv: Constructor | Fn | unknown = tkey;
@@ -146,12 +144,23 @@ export class Context<TRegistry extends RegistryType = Registry> {
             }
             return inst;
         }
-        this.#map.set(key, (inst = new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(tkey, serv as any, args as any, true, isFn(serv))));
+        this.#map.set(
+            key,
+            (inst = new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(
+                tkey,
+                serv as any,
+                args as any,
+                true,
+                isFn(serv),
+            )),
+        );
         return inst;
     }
 
-    resolve<TKey extends PeaKey<TRegistry>>(tkey: TKey, ...args: ServiceArgs<TKey, TRegistry> | []): ValueOf<TRegistry, TKey> {
-
+    resolve<TKey extends PeaKey<TRegistry>>(
+        tkey: TKey,
+        ...args: ServiceArgs<TKey, TRegistry> | []
+    ): ValueOf<TRegistry, TKey> {
         return this.register(tkey, ...args).invoke() as any;
     }
 
@@ -163,49 +172,64 @@ export class Context<TRegistry extends RegistryType = Registry> {
      * Scoping allows for a variable to be scoped to a specific context.  This is
      * useful for things like database connections, or other resources that need to be
      * scoped to a specific context.   Note the requirement to use either a `Registry` key or
-     * a `peaKey`.  
-     * 
+     * a `peaKey`.
+     *
      * @param key - pkey or registry key
-     * @returns 
+     * @returns
      */
-    scoped<TKey extends (PeaKeyType | keyof TRegistry & symbol)>(key: TKey) {
+    scoped<TKey extends PeaKeyType | (keyof TRegistry & symbol)>(key: TKey) {
         const localStorage = new AsyncVar<ServiceDescriptor<TRegistry, TKey>>(key);
         const ckey = keyOf(key);
         if (this.#map.has(ckey)) {
-            throw new PeaError(`key ${String(key)} already registered, can not register a key into more than one scope`);
+            throw new PeaError(
+                `key ${String(key)} already registered, can not register a key into more than one scope`,
+            );
         }
-        this.#map.set(ckey, new Proxy(this.register(key), {
-            get(target, prop) {
-                if (prop === "invoke") {
-                    return () => {
-                        if (!localStorage.exists()) {
-                            throw new PeaError(`scope ${String(key)} not found accessing '${prop}'}`);
-                        }
-                        return localStorage.get().invoke();
-                    };
-                }
-                return Reflect.get(target, prop);
-            },
-            set(target, prop, value) {
-                if (prop === 'proxy') {
-                    return Reflect.set(target, prop, value);
-                }
-                if (!localStorage.exists()) {
-                    throw new PeaError(`scope ${String(key)} not found setting '${String(prop)}'`);
-                }
+        this.#map.set(
+            ckey,
+            new Proxy(this.register(key), {
+                get(target, prop) {
+                    if (prop === "invoke") {
+                        return () => {
+                            if (!localStorage.exists()) {
+                                throw new PeaError(
+                                    `scope ${String(key)} not found accessing '${prop}'}`,
+                                );
+                            }
+                            return localStorage.get().invoke();
+                        };
+                    }
+                    return Reflect.get(target, prop);
+                },
+                set(target, prop, value) {
+                    if (prop === "proxy") {
+                        return Reflect.set(target, prop, value);
+                    }
+                    if (!localStorage.exists()) {
+                        throw new PeaError(
+                            `scope ${String(key)} not found setting '${String(prop)}'`,
+                        );
+                    }
 
-                return Reflect.set(localStorage.get(), prop, value);
-            }
-        }));
-
+                    return Reflect.set(localStorage.get(), prop, value);
+                },
+            }),
+        );
 
         return (...[service, ...args]: ServiceArgs<TKey, TRegistry>) => {
             new AsyncScope(() => {
-                localStorage.set(new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(key, service, args as any, false, isFn(first)));
+                localStorage.set(
+                    new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(
+                        key,
+                        service,
+                        args as any,
+                        false,
+                        isFn(service),
+                    ),
+                );
             });
-        }
+        };
     }
-
 }
 
 export function createNewContext<TRegistry extends RegistryType>() {
@@ -222,18 +246,23 @@ export function keyOf(key: PeaKey<any> | Service): CKey {
         : (key as any);
 }
 
-
-
-//The second argument is usually a factory.  It could also be a value.   This tries to enforce if it is a factory, it should 
+//The second argument is usually a factory.  It could also be a value.   This tries to enforce if it is a factory, it should
 // return the right type.   It is a little broken, because if the first argument is a factory (and key) than the second argument
 // should be treated like an argument.   Which seems asymetrical but is I think correct.
 
 type ServiceArgs<TKey, TRegistry extends RegistryType = Registry> =
-    TKey extends PeaKeyType<infer TValue> ? ParamArr<TValue> :
-    TKey extends keyof TRegistry ? ParamArr<TRegistry[TKey]> :
-    TKey extends Constructor ? ConstructorParameters<TKey> :
-    TKey extends Fn ? Parameters<TKey> :
-    [];
+    TKey extends PeaKeyType<infer TValue>
+    ? ParamArr<TValue>
+    : TKey extends keyof TRegistry
+    ? ParamArr<TRegistry[TKey]>
+    : TKey extends Constructor
+    ? ConstructorParameters<TKey>
+    : TKey extends Fn
+    ? Parameters<TKey>
+    : [];
 
-
-type ParamArr<T, TFn extends Fn<T> = Fn<T>, TCon extends Constructor<T> = Constructor<T>> = [TFn, ...Parameters<TFn>] | [TCon, ...ConstructorParameters<TCon>] | [T];
+type ParamArr<
+    T,
+    TFn extends Fn<T> = Fn<T>,
+    TCon extends Constructor<T> = Constructor<T>,
+> = [TFn, ...Parameters<TFn>] | [TCon, ...ConstructorParameters<TCon>] | [T];
