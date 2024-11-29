@@ -20,6 +20,8 @@ import type {
 } from "./types";
 import { ServiceDescriptor } from "./ServiceDescriptor";
 import { serviceSymbol } from "./symbols";
+import { AsyncLocalStorage } from "async_hooks";
+import { AsyncScope, AsyncVar } from "./AsyncVar";
 
 export type ContextType = InstanceType<typeof Context>;
 
@@ -157,8 +159,46 @@ export class Context<TRegistry extends RegistryType = Registry> {
         return new Context<TTRegistry>(this);
     }
 
+    /**
+     * Scoping allows for a variable to be scoped to a specific context.  This is
+     * useful for things like database connections, or other resources that need to be
+     * scoped to a specific context.  
+     * @param key 
+     * @returns 
+     */
+    scoped<TKey extends (PeaKeyType | keyof TRegistry & symbol)>(key: TKey) {
+        const localStorage = new AsyncVar<ServiceDescriptor<TRegistry, TKey>>(key);
+        this.#map.set(keyOf(key), new Proxy(this.register(key), {
+            get(target, prop) {
+                if (prop === "invoke") {
+                    return () => {
+                        if (!localStorage.exists()) {
+                            throw new PeaError(`scope ${String(key)} not found accessing '${prop}'}`);
+                        }
+                        return localStorage.get().invoke();
+                    };
+                }
+                return Reflect.get(target, prop);
+            },
+            set(target, prop, value) {
+                if (prop === 'proxy') {
+                    return Reflect.set(target, prop, value);
+                }
+                if (!localStorage.exists()) {
+                    throw new PeaError(`scope ${String(key)} not found setting '${String(prop)}'`);
+                }
+
+                return Reflect.set(localStorage.get(), prop, value);
+            }
+        }));
 
 
+        return (...[first, ...rest]: ServiceArgs<TKey, TRegistry>) => {
+            new AsyncScope(() => {
+                localStorage.set(new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(key, first, rest as any, false, isFn(first)));
+            });
+        }
+    }
 
 }
 

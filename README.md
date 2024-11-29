@@ -135,6 +135,39 @@ const userService = context.resolve(UserService);
 userService.getUsers(); // Outputs: Connected to database
 ```
 
+
+## AsyncLocal Storage usage
+Preliminary support is available for AsyncLocalStorage, it's highly inspired by 
+[AsyncVars](https://eytanmanor.medium.com/should-you-use-asynclocalstorage-2063854356bb)
+.  This is useful for things like user Auth in web apps.   This code has no warranty or fitness
+garuntees, it is **Experimental**.
+
+
+```ts
+
+const userSymbol = peaKey<User>("user");
+
+class AuthService {
+  constructor(private user = pea(userSymbol)) {}
+ 
+  isAuthenticated() {
+    return this.user != null;
+  }
+  hasRole(role: string) {
+    return this.user?.roles.includes(role);
+  }
+  
+}
+const requestScoped = context.scoped(userSymbol);
+const app = express();
+app.use((req, res, next) => {
+    requestScoped(req.user);
+    next();
+});
+
+```
+
+
 ## API Reference
 ### pea(service, type?)
 
