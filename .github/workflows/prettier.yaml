@@ -3,7 +3,7 @@ name: Prettier Formatting
 on:
   pull_request:
     branches:
-      - **
+      - "**"
 jobs:
   prettier:
     runs-on: ubuntu-latest
