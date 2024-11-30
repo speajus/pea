@@ -9,7 +9,9 @@ on:
 jobs:
   prettier:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ./packages/pea
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
