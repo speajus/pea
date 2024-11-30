@@ -18,7 +18,6 @@ jobs:
           node-version: '20.x'
       - name: Install dependencies
         run: yarn install --frozen-lockfile   
-
+      - run: yarn run prettier:check
       - run: yarn build
       - run: yarn test
-      - run: yarn prettier:check
