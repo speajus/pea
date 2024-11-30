@@ -3,8 +3,7 @@ name: Prettier Formatting
 on:
   pull_request:
     branches:
-      - master
-      - develop
+      - **
 
 jobs:
   prettier:
