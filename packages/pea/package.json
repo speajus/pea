@@ -29,6 +29,9 @@
     "vite-tsconfig-paths": "^5.1.2",
     "vitest": "^2.1.5"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "*"
+  },
   "scripts": {
     "test": "vitest run",
     "build": "tsc",

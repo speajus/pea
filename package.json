@@ -4,5 +4,10 @@
   "license": "MIT",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "test": "npm run test --workspace=@speajus/pea",
+    "prettier": "npm run prettier --workspace=@speajus/pea ",
+    "prettier:check": "npm run prettier:check --workspace=@speajus/pea"
+  }
 }
