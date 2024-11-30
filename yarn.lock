@@ -105,7 +105,7 @@
   integrity sha512-KnXU4m9MywuZFedL35Z3PuwiTSn/yqRIhrEA9j+7OSkji39NzVkgxuxTYg5F8ryGysq4iFADaU5osSizMXhU2A==
 
 "@speajus/pea@file:/Users/justinspears/injection/packages/pea":
-  version "0.3.0"
+  version "0.3.1"
   resolved "file:packages/pea"
 
 "@types/estree@^1.0.0", "@types/estree@1.0.6":
