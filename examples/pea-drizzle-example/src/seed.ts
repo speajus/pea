@@ -5,6 +5,7 @@ import { usersTable } from './db/schema';
 
 const db = drizzle(process.env.DB_FILE_NAME!);
 async function main() {
+
     const user: typeof usersTable.$inferInsert = {
         name: 'John',
         age: 30,

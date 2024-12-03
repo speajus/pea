@@ -1,31 +1,6 @@
 import { integer, sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core"
-import { createClient } from "@libsql/client"
-import { drizzle } from "drizzle-orm/libsql"
 import type { AdapterAccountType } from "@auth/core/adapters"
-import { env } from "@speajus/pea/dist/env"
-import { pea, context } from "@speajus/pea"
-import type { Config } from "@libsql/core/api";
 
-class ClientConfig implements Config {
-    constructor(private _url = env("DATABASE_URL"), private _authToken = env("DATABASE_AUTH_TOKEN")) {
-
-    }
-    get url(): string {
-        if (!this._url) {
-            throw new Error("DATABASE_URL is not set");
-        }
-        return this._url;
-    }
-    get authToken(): string {
-        if (!this._authToken) {
-            throw new Error("DATABASE_AUTH_TOKEN is not set");
-        }
-        return this._authToken;
-    }
-}
-
-context.register(createClient, pea(ClientConfig));
-context.register(drizzle, pea(createClient));
 
 
 export const users = sqliteTable("user", {
@@ -106,3 +81,4 @@ export const authenticators = sqliteTable(
         }),
     })
 )
+

@@ -17,13 +17,13 @@ const abSymbol = Symbol("b");
 const acSymbol = Symbol("c");
 class A {
   static readonly [serviceSymbol] = aiSymbol;
-  constructor(readonly connectionUrl: string) {}
+  constructor(readonly connectionUrl: string) { }
   connection() {
     return this.connectionUrl;
   }
 }
 class C {
-  constructor(readonly a = pea(aiSymbol)) {}
+  constructor(readonly a = pea(aiSymbol)) { }
 }
 type AI = InstanceType<typeof A>;
 declare module "@speajus/pea" {
@@ -34,7 +34,7 @@ declare module "@speajus/pea" {
   }
 }
 
-describe("pea test", () => {
+describe("context", () => {
   it("should test something", () => {
     const t = { value: "I am a string" };
     const proxy = new Proxy(t, {
@@ -66,7 +66,7 @@ describe("pea test", () => {
   });
 
   it("should instatiate classes that", () => {
-    class B {}
+    class B { }
     const resp = ctx.resolve(B);
     expect(ctx.resolve(B)).toBeInstanceOf(B);
   });
@@ -116,7 +116,7 @@ describe("pea test", () => {
         return this.constructor.name;
       }
     }
-    class TA extends Base {}
+    class TA extends Base { }
     class TB extends Base {
       constructor(readonly a = pea(TA)) {
         super();
@@ -133,7 +133,7 @@ describe("pea test", () => {
         readonly a = pea(TA),
         readonly b = pea(TB),
         readonly c = pea(TC),
-      ) {}
+      ) { }
       toString() {
         return [this.a, this.b, this.c].join("-");
       }
@@ -244,7 +244,7 @@ describe("pea test", () => {
       constructor(
         readonly a: number,
         public b = pea(pkey),
-      ) {}
+      ) { }
     }
     ctx.register(pkey, () => "test");
     const result = ctx.resolve(TestA, 2);
@@ -258,7 +258,7 @@ describe("pea test", () => {
         public b: string,
         public c: string,
         public d: string,
-      ) {}
+      ) { }
     }
     const result = ctx.resolve(TestAlot, 2, "b", "c", "d");
     expect(result.a == 2).toBe(true);
@@ -295,4 +295,19 @@ describe("proxy", () => {
     const resp = ctx.register(PA).proxy;
     expect(resp.a).toBe(1);
   });
+  it("should have keys", () => {
+    class PA {
+      public a = 1;
+
+    }
+    const a = pea(PA);
+    expect(Object.keys(a)).toEqual(["a"]);
+  });
+  it('should work with has', () => {
+    class PA {
+      public a = 1;
+    }
+    const a = pea(PA);
+    expect("a" in a).toBe(true);
+  })
 });
