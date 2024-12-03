@@ -31,7 +31,7 @@ const scoped: Context["scoped"] = function (this: Context, key) {
     );
   }
   serviceDesc.invoke = () => {
-    return getServiceDescription(key)!.invoke();
+    return getServiceDescription(key).invoke();
   };
 
   return (...[service, ...args]) => (next) => {
@@ -46,7 +46,7 @@ const scoped: Context["scoped"] = function (this: Context, key) {
   };
 };
 
-function getServiceDescription(key: PeaKey<any>) {
+function getServiceDescription(key: PeaKey<any>): ServiceDescriptor<any, any> {
   const serviceDesc = asyncLocalStorage.getStore()?.get(key);
   if (!serviceDesc) {
     throw new PeaError(`key ${String(key)} not found in async storage, make sure the callback has been handled.`);
