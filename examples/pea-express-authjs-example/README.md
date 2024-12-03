@@ -52,6 +52,11 @@ tsx src/index.ts
 - SQLite database with Drizzle ORM
 - TypeScript support
 
+## TODO
+ - Move common code to packages/pea-express, packages/pea-authjs, packages/pea-drizzle.
+ - Add tests
+ - Add more providers.
+
 ## Project Structure
 
 - `src/`

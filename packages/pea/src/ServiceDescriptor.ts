@@ -59,6 +59,7 @@ export class ServiceDescriptor<
     args: Args<T> = [] as any,
     cacheable = true,
     public invokable = true,
+    public description?: string,
   ) {
     this[serviceSymbol] = key;
     this.args = args as Args<T>;

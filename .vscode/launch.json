@@ -8,6 +8,7 @@
 
 
 
+
     {
       "env":{
         "AUTH_SECRET": "secr3t"
@@ -17,9 +18,9 @@
       "request": "launch",
   
       // Debug current file in VSCode
-      "program": "${workspaceFolder}/examples/pea-express-example/src/index.ts",
-      "cwd": "${workspaceFolder}/examples/pea-express-example",
-      "runtimeArgs": ["--env-file=${workspaceFolder}/examples/pea-express-example/.env.local"],
+      "program": "${workspaceFolder}/examples/pea-express-authjs-example/src/index.ts",
+      "cwd": "${workspaceFolder}/examples/pea-express-authjs-example",
+      "runtimeArgs": ["--env-file=${workspaceFolder}/examples/pea-express-authjs-example/.env.local"],
       /*
        * Path to tsx binary
        * Assuming locally installed
