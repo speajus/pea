@@ -13,7 +13,8 @@ export const peaKey = <T>(name: string): PeaKeyType<T> => {
   return sym as any;
 };
 
-export const peaKeyName = (key: PeaKeyType<any>) => peaKeyMap.get(key) ?? '<symbol>';
+export const peaKeyName = (key: PeaKeyType<any>) =>
+  peaKeyMap.get(key) ?? "<symbol>";
 
 export function isPeaKey(v: unknown): v is symbol {
   return isSymbol(v) && peaKeyMap.has(v);

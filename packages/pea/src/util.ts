@@ -17,7 +17,7 @@ export function* filter<T>(it: Iterable<T>, fn: (v: T) => boolean) {
 }
 /**
  * Concats a bunch of iterables, skipping nulls and undefined.
- * @param it 
+ * @param it
  */
 export function* concat<T>(...it: (Iterable<T> | undefined | null)[]) {
   for (const v of it) {
@@ -29,8 +29,8 @@ export function* concat<T>(...it: (Iterable<T> | undefined | null)[]) {
 }
 /**
  * Filters and maps iterable, skipping nulls and undefined.
- * @param it 
- * @param fn 
+ * @param it
+ * @param fn
  */
 export function* filterMap<T, V>(it: Iterable<T>, fn: (v: T) => V | undefined) {
   for (const v of it) {

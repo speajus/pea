@@ -34,10 +34,11 @@ export interface Context<TRegistry extends RegistryType = Registry> {
   ): void;
 }
 export class Context<TRegistry extends RegistryType = Registry>
-  implements Context<TRegistry> {
+  implements Context<TRegistry>
+{
   //this thing is used to keep track of dependencies.
   protected map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
-  constructor(private readonly parent?: Context<any>) { }
+  constructor(private readonly parent?: Context<any>) {}
   pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
   pea(service: unknown): unknown {
     return (this.get(keyOf(service as any)) ?? this.register(service as any))
@@ -197,30 +198,37 @@ export class Context<TRegistry extends RegistryType = Registry>
     const sym = isPeaKey(service);
 
     if (sym) {
-      yield* filterMap(this.map.values(), v => v.tags.includes(service as any) ? v.proxy : undefined);
+      yield* filterMap(this.map.values(), (v) =>
+        v.tags.includes(service as any) ? v.proxy : undefined,
+      );
     } else if (isFn(service)) {
       if (isConstructor(service)) {
-        yield* filterMap(this.map.values(), v => isInherited(v.service, service) ? v.proxy : undefined);
+        yield* filterMap(this.map.values(), (v) =>
+          isInherited(v.service, service) ? v.proxy : undefined,
+        );
       } else {
-        yield* filterMap(this.map.values(), v => v.service && v.service === service ? v.proxy : undefined);
+        yield* filterMap(this.map.values(), (v) =>
+          v.service && v.service === service ? v.proxy : undefined,
+        );
       }
     }
-    if (this.parent)
-      yield* this.parent._listOf(service);
+    if (this.parent) yield* this.parent._listOf(service);
   }
 
   /**
    * Tries to find all instances of a service.  This is useful if you want to find all instances of a service. Or a tag
    * of service.   tags should be PeaKeyType that are used to tag services.  Note this returns a proxy.  So it should
    * recall if a dependent value changes.
-   * 
-   * @param service 
-   * @returns 
+   *
+   * @param service
+   * @returns
    */
   listOf<T extends PeaKey<TRegistry>>(
     service: T,
   ): Array<ValueOf<TRegistry, T>> {
-    return this.register(peaKey(String(service)), () => Array.from(this._listOf(service))).withCacheable(false).proxy as any;
+    return this.register(peaKey(String(service)), () =>
+      Array.from(this._listOf(service)),
+    ).withCacheable(false).proxy as any;
   }
 }
 
