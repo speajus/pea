@@ -3,9 +3,11 @@ import { context, pea } from "@speajus/pea";
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
 import GitHub from "@auth/express/providers/github"
 import { env } from "@speajus/pea/env";
-import { drizzlePeaKey } from "./db";
+import { drizzlePeaKey, register } from "@speajus/pea-drizzle-example";
 import '@speajus/pea/async';
-import './db';
+
+register();
+
 
 context.register(DrizzleAdapter, pea(drizzlePeaKey) as unknown as Parameters<typeof DrizzleAdapter>[0]);
 

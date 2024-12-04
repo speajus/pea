@@ -1,3 +1,5 @@
+#!/usr/bin/env tsx
+
 import { migrate as dbMigrate } from "drizzle-orm/libsql/migrator";
 import { drizzlePeaKey, register } from "./pea";
 import { pea } from "@speajus/pea/context";

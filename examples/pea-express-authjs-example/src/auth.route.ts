@@ -27,6 +27,7 @@ app.use("/*", async (req, res, next) => {
     const session = await getSession(req, pea(ExpressAuthConfigClass))
     if (!session?.user) {
         return res.redirect('/auth/signin');
+
     }
 
     requestScoped(next, session);

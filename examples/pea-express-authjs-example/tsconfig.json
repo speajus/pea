@@ -107,8 +107,9 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */,
     "paths": {
+      "@speajus/pea-drizzle-example": ["../pea-drizzle-example/src/index.ts"],
       "@speajus/pea/*": ["../../packages/pea/src/*.ts"],
-      "@speajus/pea": ["../../packages/pea/src/index.ts"]
+      "@speajus/pea": ["../../packages/pea/src/index.ts"],
     }
   },
 }

@@ -1,3 +1,5 @@
+import * as schemaGlob from './schema';
 export * from './pea';
 export * from './migrate';
-export * from './schema';
+
+export const schema = schemaGlob;

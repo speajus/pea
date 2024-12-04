@@ -1,4 +1,4 @@
-import 'dotenv/config';
+#!/usr/bin/env tsx
 import { eq } from 'drizzle-orm';
 import { drizzlePeaKey, register } from './pea';
 import { pea } from '@speajus/pea/context';

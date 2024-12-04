@@ -52,6 +52,9 @@ importers:
       '@auth/express':
         specifier: ^0.8.4
         version: 0.8.4(express@4.21.1)
+      '@speajus/pea-drizzle-example':
+        specifier: link:../pea-drizzle-example
+        version: link:../pea-drizzle-example
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.0

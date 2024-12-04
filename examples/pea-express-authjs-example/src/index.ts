@@ -1,8 +1,8 @@
-import './env';
 import app from './auth.route';
 import * as ejs from 'ejs';
 import { pea } from '@speajus/pea';
 import { sessionPeaKey } from './pea';
+import { env } from '@speajus/pea/env';
 
 const port = app.get('port') ?? 3000;
 const __dirname = new URL('.', import.meta.url).pathname;
@@ -16,5 +16,5 @@ app.get('/', function (req, res) {
 
 // about page
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}\n http://localhost:${port}`);
+    console.log(`Server is running on port ${port}\n http://localhost:${port} using db ${env("DATABASE_URL")}`);
 })  

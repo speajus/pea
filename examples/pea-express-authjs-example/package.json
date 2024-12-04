@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "dev": "tsx --env-file .env.local src/index.ts",
     "clean": "rm -rf dist && rm -f local.test.db",
     "test": "vitest run",
     "build": "tsc",
@@ -23,6 +24,7 @@
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.4",
     "@auth/express": "^0.8.4",
+    "@speajus/pea-drizzle-example": "link:../pea-drizzle-example",
     "@types/express": "^5.0.0",
     "drizzle-orm": "^0.37.0",
     "ejs": "^3.1.10"

@@ -1,15 +1,19 @@
 {
   "name": "@speajus/pea-drizzle-example",
   "version": "1.0.0",
-  "main": "index.js",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
     "watch": "tsc -w",
-    "migrate": "tsx --env-file .env.local src/migrate.ts",
-    "seed": "tsx src/seed.ts"
+    "generate": "pnpm drizzle-kit generate",
+    "migrate": "pnpm run generate && tsx --env-file .env.local src/migrate.ts",
+    "seed": "tsx src/seed.ts",
+    "setup": "pnpm run migrate && pnpm run seed"
+  },
+  "bin": {
+    "migrate": "src/migrate.ts"
   },
   "author": "",
   "license": "ISC",
