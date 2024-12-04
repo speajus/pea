@@ -3,20 +3,25 @@
   "version": "1.0.0",
   "main": "index.js",
   "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "migrate": "tsx --env-file .env.local src/migrate.ts",
+    "seed": "tsx src/seed.ts"
   },
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-    "@libsql/client": "^0.14.0",
-    "@speajus/pea": "*",
-    "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.36.4"
-  },
   "devDependencies": {
     "drizzle-kit": "^0.28.1",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite-tsconfig-paths": "^5.1.2",
+    "vitest": "^2.1.5"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.37.0"
   }
 }
