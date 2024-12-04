@@ -29,6 +29,7 @@
     "@speajus/pea-drizzle-example": "link:../pea-drizzle-example",
     "@types/express": "^5.0.0",
     "drizzle-orm": "^0.37.0",
-    "ejs": "^3.1.10"
+    "ejs": "^3.1.10",
+    "@libsql/client": "0.14.0"
   }
 }

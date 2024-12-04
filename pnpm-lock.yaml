@@ -27,6 +27,9 @@ importers:
 
   examples/pea-drizzle-example:
     dependencies:
+      '@auth/core':
+        specifier: ^0.37.4
+        version: 0.37.4
       '@libsql/client':
         specifier: 0.14.0
         version: 0.14.0
@@ -58,6 +61,9 @@ importers:
       '@auth/express':
         specifier: ^0.8.4
         version: 0.8.4(express@4.21.1)
+      '@libsql/client':
+        specifier: 0.14.0
+        version: 0.14.0
       '@speajus/pea-drizzle-example':
         specifier: link:../pea-drizzle-example
         version: link:../pea-drizzle-example

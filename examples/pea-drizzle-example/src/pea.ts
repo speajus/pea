@@ -2,15 +2,14 @@ import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { envRequired } from "@speajus/pea/env";
 import { pea, context, peaKey } from "@speajus/pea";
-import type { Config } from "@libsql/core/api";
 import * as schemaOrig from "./schema";
 
 export const schema = schemaOrig;
 
-export class ClientConfig implements Config {
+export class ClientConfig {
   constructor(
     private _url = envRequired("DATABASE_URL"),
-    public _authToken = envRequired("DATABASE_AUTH_TOKEN"),
+    public _authToken = envRequired("DATABASE_AUTH_TOKEN")
   ) {}
   //These eventually get passed into  rust, and rust really doesn't seem to like proxied strings, so we need to force them to be real strings.
   //Otherwise in the downstream libsql code we get "TypeError: failed to downcast any to string"

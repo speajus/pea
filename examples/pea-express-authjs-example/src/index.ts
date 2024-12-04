@@ -17,6 +17,8 @@ app.get("/", function (req, res) {
 // about page
 app.listen(port, () => {
   console.log(
-    `Server is running on port ${port}\n http://localhost:${port} using db ${env("DATABASE_URL")}`,
+    `Server is running on port ${port}\n http://localhost:${port} using db ${env(
+      "DATABASE_URL"
+    )}`
   );
 });
