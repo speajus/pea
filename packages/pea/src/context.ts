@@ -184,9 +184,9 @@ export class Context<TRegistry extends RegistryType = Registry>
   newContext<TTRegistry extends TRegistry = TRegistry>() {
     return new Context<TTRegistry>(this);
   }
-  scoped<TKey extends PeaKeyType | (keyof TRegistry & symbol)>(
+  scoped<R, TKey extends PeaKeyType | (keyof TRegistry & symbol)>(
     _key: TKey,
-  ): (...args: ServiceArgs<TKey, TRegistry>) => void {
+  ): (next: () => R, ...args: ServiceArgs<TKey, TRegistry>) => R {
     throw new PeaError(
       "async not enabled, please add 'import \"@speajus/pea/async\";' to your module to enable async support",
     );

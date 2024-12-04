@@ -34,7 +34,7 @@ declare module "@speajus/pea" {
   }
 }
 
-describe("pea test", () => {
+describe("context", () => {
   it("should test something", () => {
     const t = { value: "I am a string" };
     const proxy = new Proxy(t, {
@@ -294,5 +294,19 @@ describe("proxy", () => {
     }
     const resp = ctx.register(PA).proxy;
     expect(resp.a).toBe(1);
+  });
+  it("should have keys", () => {
+    class PA {
+      public a = 1;
+    }
+    const a = pea(PA);
+    expect(Object.keys(a)).toEqual(["a"]);
+  });
+  it("should work with has", () => {
+    class PA {
+      public a = 1;
+    }
+    const a = pea(PA);
+    expect("a" in a).toBe(true);
   });
 });

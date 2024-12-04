@@ -69,3 +69,14 @@ export class PeaError extends Error {
     Object.setPrototypeOf(this, Error);
   }
 }
+export const nullableSymbol = Symbol("@pea/nullable");
+
+export function isBoolean(v: unknown): v is boolean {
+  return typeof v === "boolean";
+}
+
+export function isNullish(v: unknown): v is null | undefined {
+  return v == null || hasA(v, nullableSymbol, isBoolean)
+    ? (v?.nullable ?? false)
+    : false;
+}

@@ -1,20 +1,31 @@
-import { PeaError } from "./guards";
+import { nullableSymbol, PeaError } from "./guards";
+import { ServiceDescriptor } from "./ServiceDescriptor";
 import type { Constructor } from "./types";
 
 export const proxyKey = Symbol("@pea/proxy-key");
 
 export function newProxy<T extends Constructor>(
   key: unknown,
-  instance: () => InstanceType<T>,
+  service: ServiceDescriptor<any, any>,
 ) {
   return new Proxy({} as InstanceType<T>, {
     get(_target, prop) {
       if (prop === proxyKey) {
         return key;
       }
-      const [isPrim, val] = proxyable(instance());
+      const val = service.invoke();
+      if (prop === nullableSymbol) {
+        return val == null;
+      }
+      if (val == null) {
+        if (prop === "toString") {
+          return () => val + "";
+        }
+        return null;
+      }
+
       //So sometimes a factory value returns a primitive, this handles that.
-      if (isPrim) {
+      if (service.primitive) {
         const prim = val;
         if (
           prop === Symbol.toPrimitive ||
@@ -30,21 +41,35 @@ export function newProxy<T extends Constructor>(
             ? value.bind(prim)
             : value;
       }
-      return val == null
-        ? val
-        : typeof (val as any)[prop] === "function"
-          ? (val as any)[prop].bind(val)
-          : (val as any)[prop];
+
+      return typeof (val as any)[prop] === "function"
+        ? (val as any)[prop].bind(val)
+        : (val as any)[prop];
+    },
+    getOwnPropertyDescriptor(target, prop) {
+      return Reflect.getOwnPropertyDescriptor(service.invoke(), prop);
     },
     set(_target, prop, value) {
-      instance()[prop] = value;
+      service.invoke()[prop] = value;
       return true;
     },
-    ownKeys: () => {
-      return Object.keys(instance());
+    ownKeys() {
+      const value = service.invoke();
+      if (service.primitive) {
+        return [];
+      }
+      const keys = Reflect.ownKeys(value);
+      return keys;
     },
-    getPrototypeOf: () => {
-      return Object.getPrototypeOf(instance());
+    has(_target, prop) {
+      const val = service.invoke();
+      if (service.primitive) {
+        return false;
+      }
+      return prop in val;
+    },
+    getPrototypeOf() {
+      return Object.getPrototypeOf(service.invoke());
     },
   });
 }

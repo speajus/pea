@@ -1,9 +1,17 @@
 import { keyOf } from "./util";
-import { has, isConstructor, isFn, PeaError } from "./guards";
+import { has, isConstructor, isFn, isPrimitive, PeaError } from "./guards";
 import { newProxy, proxyKey } from "./newProxy";
 import type { Registry } from "./registry";
 import { serviceSymbol } from "./symbols";
-import type { CKey, Constructor, Fn, OfA, PeaKey, RegistryType } from "./types";
+import type {
+  CKey,
+  Constructor,
+  Fn,
+  OfA,
+  PeaKey,
+  RegistryType,
+  ValueOf,
+} from "./types";
 
 const EMPTY = [] as const;
 type EmptyTuple = typeof EMPTY;
@@ -49,13 +57,17 @@ export class ServiceDescriptor<
   private _args: Args<T> = [] as any;
   private _proxy?: Returns<T>;
   private _factory = false;
+  public primitive?: boolean;
   public invalid = false;
+  public optional = true;
+
   constructor(
     key: PeaKey<TRegistry>,
     service: T | undefined = undefined,
     args: Args<T> = [] as any,
     cacheable = true,
     public invokable = true,
+    public description?: string,
   ) {
     this[serviceSymbol] = key;
     this.args = args as Args<T>;
@@ -70,7 +82,7 @@ export class ServiceDescriptor<
   get proxy(): Returns<T> {
     const key = keyOf(this[serviceSymbol]);
     ServiceDescriptor.#dependencies.add(key);
-    return (this._proxy ??= newProxy(key, this.invoke));
+    return (this._proxy ??= newProxy(key, this));
   }
 
   set cacheable(_cacheable: boolean) {
@@ -134,12 +146,22 @@ export class ServiceDescriptor<
     this.service = service;
     return this;
   }
-  withCacheable(cacheable: boolean) {
-    this.cacheable = cacheable;
+  withCacheable(cacheable?: boolean) {
+    this.cacheable = cacheable ?? !this.cacheable;
     return this;
   }
-  withInvokable(invokable: boolean) {
-    this.invokable = invokable;
+  withInvokable(invokable?: boolean) {
+    this.invokable = invokable ?? !this.invokable;
+    return this;
+  }
+  withOptional(optional?: boolean) {
+    this.optional = optional ?? !this.optional;
+    return this;
+  }
+  withValue(value: ValueOf<TRegistry, T>) {
+    this.service = value;
+    this.invokable = false;
+    this.invalidate();
     return this;
   }
   hasDependency(key: CKey) {
@@ -180,9 +202,16 @@ export class ServiceDescriptor<
       : new (this.service as any)(...this.args);
     this.addDependency(...ServiceDescriptor.#dependencies);
     this.invoked = true;
+    this.primitive = isPrimitive(resp);
+    if (resp == null && !this.optional) {
+      throw new PeaError(
+        `service '${String(this[serviceSymbol])}' is not optional and returned null`,
+      );
+    }
     if (this.cacheable) {
       return (this._instance = resp);
     }
+
     return resp;
   };
 }

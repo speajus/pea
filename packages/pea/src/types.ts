@@ -17,7 +17,7 @@ export interface Service<T extends symbol = symbol> {
   [serviceSymbol]: T;
 }
 
-export type ValueOf<TRegistry extends RegistryType, T, K = unknown> =
+export type ValueOf<TRegistry extends RegistryType, T> =
   T extends PeaKeyType<infer TValue>
     ? TValue
     : T extends Constructor

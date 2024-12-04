@@ -4,8 +4,10 @@
   "license": "MIT",
   "description": "A lightweight Dependency Injection (DI) framework for Node.js, based on proxies.",
   "type": "module",
-  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    "./*": "./dist/*.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/speajus/pea.git"
@@ -36,9 +38,9 @@
     "test": "vitest run",
     "build": "tsc",
     "watch": "tsc -w",
-    "prettier": "prettier --write .",
-    "prettier:check": "prettier --check .",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "lint:check": "prettier --check .",
+    "lint": "prettier --write ."
   },
   "dependencies": {}
 }
