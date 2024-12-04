@@ -3,7 +3,15 @@ import { has, isConstructor, isFn, isPrimitive, PeaError } from "./guards";
 import { newProxy, proxyKey } from "./newProxy";
 import type { Registry } from "./registry";
 import { serviceSymbol } from "./symbols";
-import type { CKey, Constructor, Fn, OfA, PeaKey, RegistryType, ValueOf } from "./types";
+import type {
+  CKey,
+  Constructor,
+  Fn,
+  OfA,
+  PeaKey,
+  RegistryType,
+  ValueOf,
+} from "./types";
 
 const EMPTY = [] as const;
 type EmptyTuple = typeof EMPTY;
@@ -11,13 +19,13 @@ type EmptyTuple = typeof EMPTY;
 type Args<T> = T extends Constructor
   ? ConstructorParameters<T>
   : T extends Fn
-  ? Parameters<T>
-  : EmptyTuple;
+    ? Parameters<T>
+    : EmptyTuple;
 type Returns<T> = T extends Constructor
   ? InstanceType<T>
   : T extends Fn
-  ? ReturnType<T>
-  : T;
+    ? ReturnType<T>
+    : T;
 
 export class ServiceDescriptor<
   TRegistry extends RegistryType,

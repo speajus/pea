@@ -4,6 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "lint:check": "prettier --check .",
+    "lint": "prettier --write .",
     "dev": "tsx --env-file .env.local src/index.ts",
     "clean": "rm -rf dist && rm -f local.test.db",
     "test": "vitest run",

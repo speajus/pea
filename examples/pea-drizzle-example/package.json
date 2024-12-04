@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run",
+    "lint:check": "prettier --check .",
+    "lint": "prettier --write .",
+    "test": "pnpm drizzle-kit generate && vitest run",
     "build": "tsc",
     "watch": "tsc -w",
+    "clean": "rm -rf dist local.db local.test.db",
     "generate": "pnpm drizzle-kit generate",
     "migrate": "pnpm run generate && tsx --env-file .env.local src/migrate.ts",
     "seed": "tsx src/seed.ts",

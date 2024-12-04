@@ -38,9 +38,9 @@
     "test": "vitest run",
     "build": "tsc",
     "watch": "tsc -w",
-    "prettier": "prettier --write .",
-    "prettier:check": "prettier --check .",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "lint:check": "prettier --check .",
+    "lint": "prettier --write ."
   },
   "dependencies": {}
 }

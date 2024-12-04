@@ -18,8 +18,8 @@ export function newProxy<T extends Constructor>(
         return val == null;
       }
       if (val == null) {
-        if (prop === 'toString') {
-          return () => val + '';
+        if (prop === "toString") {
+          return () => val + "";
         }
         return null;
       }

@@ -1,4 +1,3 @@
-
 # Pea Express Auth Example
 
 This is an example project demonstrating how to use [@speajus/pea](https://github.com/speajus/pea) with Express and [@auth/express](https://www.npmjs.com/package/@auth/express) for GitHub OAuth authentication.
@@ -15,11 +14,13 @@ This is an example project demonstrating how to use [@speajus/pea](https://githu
 ## Setup
 
 1. Clone the repository and install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Create a GitHub OAuth App:
+
    - Go to [GitHub Developer Settings](https://github.com/settings/developers)
    - Click "New OAuth App"
    - Fill in the following:
@@ -30,6 +31,7 @@ pnpm install
    - Copy your Client ID and generate a Client Secret
 
 3. Create a `.env.local` file in the project root:
+
 ```env
 DATABASE_URL=file:local.db
 DATABASE_AUTH_TOKEN=""
@@ -39,6 +41,7 @@ AUTH_GITHUB_SECRET=your_github_client_secret
 ```
 
 4. Start the development server:
+
 ```bash
 pnpm run dev
 ```
@@ -53,9 +56,10 @@ pnpm run dev
 - TypeScript support
 
 ## TODO
- - Move common code to packages/pea-express, packages/pea-authjs, packages/pea-drizzle.
- - Add tests
- - Add more providers.
+
+- Move common code to packages/pea-express, packages/pea-authjs, packages/pea-drizzle.
+- Add tests
+- Add more providers.
 
 ## Project Structure
 

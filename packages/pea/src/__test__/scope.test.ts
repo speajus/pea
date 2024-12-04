@@ -9,7 +9,7 @@ describe("scope", () => {
     const scopedKey = peaKey<string>("async-scoped-value");
 
     class ScopedValue {
-      constructor(public value: string = pea(scopedKey)) { }
+      constructor(public value: string = pea(scopedKey)) {}
     }
     const sv = pea(ScopedValue);
     const scopeHandler = context.scoped(scopedKey);
@@ -40,6 +40,6 @@ describe("scope", () => {
   });
 });
 
-function* range(start: number, end: number, prefix = '') {
+function* range(start: number, end: number, prefix = "") {
   for (let i = start; i < end; i++) yield [i, `${prefix}${i}`] as const;
 }

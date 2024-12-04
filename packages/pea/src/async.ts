@@ -6,9 +6,10 @@ import { keyOf } from "./util";
 import { PeaKey } from "./types";
 
 //borrowed from https://eytanmanor.medium.com/should-you-use-asynclocalstorage-2063854356bb
-const asyncLocalStorage = new AsyncLocalStorage<Map<PeaKey<any>, ServiceDescriptor<any, any>>>();
+const asyncLocalStorage = new AsyncLocalStorage<
+  Map<PeaKey<any>, ServiceDescriptor<any, any>>
+>();
 const serviceProxySymbol = Symbol("@pea/ServiceDescriptorProxy");
-
 
 /**
  * Scoping allows for a variable to be scoped to a specific context.  This is
@@ -39,10 +40,19 @@ const scoped: Context["scoped"] = function (this: Context, key) {
   serviceDesc.invoke[asyncLocalSymbol] = key;
 
   return (next: () => void, ...[service, ...args]) => {
-
     const map = asyncLocalStorage.getStore() ?? new Map();
     if (!map.has(key)) {
-      map.set(key, new ServiceDescriptor(key, service, args as any, false, isFn(service), `async scoped pea '${String(key)}'`));
+      map.set(
+        key,
+        new ServiceDescriptor(
+          key,
+          service,
+          args as any,
+          false,
+          isFn(service),
+          `async scoped pea '${String(key)}'`,
+        ),
+      );
     }
     return asyncLocalStorage.run(map, next) as any;
   };
@@ -51,7 +61,9 @@ const scoped: Context["scoped"] = function (this: Context, key) {
 function getServiceDescription(key: PeaKey<any>): ServiceDescriptor<any, any> {
   const serviceDesc = asyncLocalStorage.getStore()?.get(key);
   if (!serviceDesc) {
-    throw new PeaError(`key ${String(key)} not found in async storage, make sure the callback has been handled.`);
+    throw new PeaError(
+      `key ${String(key)} not found in async storage, make sure the callback has been handled.`,
+    );
   }
   return serviceDesc;
 }

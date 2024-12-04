@@ -33,10 +33,11 @@ export interface Context<TRegistry extends RegistryType = Registry> {
   ): void;
 }
 export class Context<TRegistry extends RegistryType = Registry>
-  implements Context<TRegistry> {
+  implements Context<TRegistry>
+{
   //this thing is used to keep track of dependencies.
   protected map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
-  constructor(private readonly parent?: Context<any>) { }
+  constructor(private readonly parent?: Context<any>) {}
   pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
   pea(service: unknown): unknown {
     return (this.get(keyOf(service as any)) ?? this.register(service as any))
@@ -185,13 +186,12 @@ export class Context<TRegistry extends RegistryType = Registry>
   }
   scoped<R, TKey extends PeaKeyType | (keyof TRegistry & symbol)>(
     _key: TKey,
-  ): ((next: () => R, ...args: ServiceArgs<TKey, TRegistry>) => R) {
+  ): (next: () => R, ...args: ServiceArgs<TKey, TRegistry>) => R {
     throw new PeaError(
       "async not enabled, please add 'import \"@speajus/pea/async\";' to your module to enable async support",
     );
   }
 }
-
 
 export function createNewContext<TRegistry extends RegistryType>() {
   return new Context<TRegistry>();

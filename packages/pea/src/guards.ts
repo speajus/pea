@@ -76,6 +76,7 @@ export function isBoolean(v: unknown): v is boolean {
 }
 
 export function isNullish(v: unknown): v is null | undefined {
-  return v == null || hasA(v, nullableSymbol, isBoolean) ? v?.nullable ?? false : false;
+  return v == null || hasA(v, nullableSymbol, isBoolean)
+    ? (v?.nullable ?? false)
+    : false;
 }
-
