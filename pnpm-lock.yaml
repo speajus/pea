@@ -27,6 +27,9 @@ importers:
 
   examples/pea-drizzle-example:
     dependencies:
+      '@libsql/client':
+        specifier: 0.14.0
+        version: 0.14.0
       drizzle-orm:
         specifier: ^0.37.0
         version: 0.37.0(@libsql/client@0.14.0)
@@ -2684,12 +2687,10 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
-    optional: true
 
   '@libsql/core@0.14.0':
     dependencies:
       js-base64: 3.7.7
-    optional: true
 
   '@libsql/darwin-arm64@0.4.7':
     optional: true
@@ -2706,10 +2707,8 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
-    optional: true
 
-  '@libsql/isomorphic-fetch@0.3.1':
-    optional: true
+  '@libsql/isomorphic-fetch@0.3.1': {}
 
   '@libsql/isomorphic-ws@0.1.5':
     dependencies:
@@ -2718,7 +2717,6 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
-    optional: true
 
   '@libsql/linux-arm64-gnu@0.4.7':
     optional: true
@@ -2751,8 +2749,7 @@ snapshots:
       globby: 11.1.0
       read-yaml-file: 1.1.0
 
-  '@neon-rs/load@0.0.4':
-    optional: true
+  '@neon-rs/load@0.0.4': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -2884,7 +2881,6 @@ snapshots:
   '@types/ws@8.5.13':
     dependencies:
       '@types/node': 22.10.1
-    optional: true
 
   '@vitest/coverage-v8@2.1.8(vitest@2.1.8(@types/node@22.10.1))':
     dependencies:
@@ -3066,8 +3062,7 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  data-uri-to-buffer@4.0.1:
-    optional: true
+  data-uri-to-buffer@4.0.1: {}
 
   debug@2.6.9:
     dependencies:
@@ -3091,8 +3086,7 @@ snapshots:
 
   detect-indent@6.1.0: {}
 
-  detect-libc@2.0.2:
-    optional: true
+  detect-libc@2.0.2: {}
 
   dir-glob@3.0.1:
     dependencies:
@@ -3323,7 +3317,6 @@ snapshots:
     dependencies:
       node-domexception: 1.0.0
       web-streams-polyfill: 3.3.3
-    optional: true
 
   filelist@1.0.4:
     dependencies:
@@ -3358,7 +3351,6 @@ snapshots:
   formdata-polyfill@4.0.10:
     dependencies:
       fetch-blob: 3.2.0
-    optional: true
 
   forwarded@0.2.0: {}
 
@@ -3515,8 +3507,7 @@ snapshots:
 
   jose@5.9.6: {}
 
-  js-base64@3.7.7:
-    optional: true
+  js-base64@3.7.7: {}
 
   js-yaml@3.14.1:
     dependencies:
@@ -3539,7 +3530,6 @@ snapshots:
       '@libsql/linux-x64-gnu': 0.4.7
       '@libsql/linux-x64-musl': 0.4.7
       '@libsql/win32-x64-msvc': 0.4.7
-    optional: true
 
   locate-path@5.0.0:
     dependencies:
@@ -3610,15 +3600,13 @@ snapshots:
 
   negotiator@0.6.3: {}
 
-  node-domexception@1.0.0:
-    optional: true
+  node-domexception@1.0.0: {}
 
   node-fetch@3.3.2:
     dependencies:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
-    optional: true
 
   oauth4webapi@3.1.4: {}
 
@@ -3693,8 +3681,7 @@ snapshots:
 
   prettier@3.4.1: {}
 
-  promise-limit@2.7.0:
-    optional: true
+  promise-limit@2.7.0: {}
 
   proxy-addr@2.0.7:
     dependencies:
@@ -3999,8 +3986,7 @@ snapshots:
       - supports-color
       - terser
 
-  web-streams-polyfill@3.3.3:
-    optional: true
+  web-streams-polyfill@3.3.3: {}
 
   which@2.0.2:
     dependencies:
@@ -4023,5 +4009,4 @@ snapshots:
       string-width: 5.1.2
       strip-ansi: 7.1.0
 
-  ws@8.18.0:
-    optional: true
+  ws@8.18.0: {}
