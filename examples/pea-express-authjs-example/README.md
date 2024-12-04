@@ -40,7 +40,7 @@ AUTH_GITHUB_SECRET=your_github_client_secret
 
 4. Start the development server:
 ```bash
-tsx src/index.ts
+pnpm run dev
 ```
 
 5. Visit `http://localhost:3000` in your browser
@@ -63,9 +63,7 @@ tsx src/index.ts
   - `index.ts` - Express server setup
   - `auth.config.ts` - Auth configuration
   - `auth.route.ts` - Auth routes
-  - `db/` - Database schema and configuration
 - `views/` - EJS templates
-- `drizzle.config.ts` - Drizzle ORM configuration
 
 ## Contributing
 
