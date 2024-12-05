@@ -309,4 +309,69 @@ describe("proxy", () => {
     const a = pea(PA);
     expect("a" in a).toBe(true);
   });
+
+  describe("listOf", () => {
+    it("should work with a peaKey and tags", () => {
+      const ctx = createNewContext();
+      class PA {
+        public a = 1;
+      }
+
+      class PB {
+        public b = 1;
+      }
+      class PC {
+        public c = 1;
+      }
+      const key = peaKey<PA | PB>("test-list-of");
+      const a = ctx.register(PA).withTags(key).proxy;
+      const b = ctx.register(PB).withTags(key).proxy;
+      const sd = ctx.register(PC);
+      //expect this to be nicely typed based on the PeaKeyType.
+      const result: (PA | PB)[] = ctx.listOf(key);
+      expect(result.length).toBe(2);
+      expect(result[0]).toBe(a);
+      expect(result[1]).toBe(b);
+      const c = sd.withTags(key).proxy;
+
+      expect(result.length).toBe(3);
+      expect(result[0]).toBe(a);
+      expect(result[1]).toBe(b);
+      expect(result[2]).toBe(c);
+    });
+
+    it("should work with inheritance", () => {
+      const ctx = createNewContext();
+      class Base {
+        public a = 1;
+      }
+
+      class PB extends Base {
+        public b = 1;
+      }
+      class PC extends Base {
+        public c = 1;
+      }
+      const b = ctx.register(PB).proxy;
+      const c = ctx.register(PC).proxy;
+      const result = ctx.listOf(Base);
+      expect(result.length).toBe(2);
+      expect(result[0]).toBe(b);
+      expect(result[1]).toBe(c);
+    });
+    it("should work with factories", () => {
+      const ctx = createNewContext();
+      const factory = () => ({ a: 1 });
+
+      const a = ctx.register(peaKey("test-factory-a"), factory).proxy;
+      const b = ctx.register(peaKey("test-factory-b"), factory).proxy;
+      const c = ctx.register(factory).proxy;
+      const result = ctx.listOf(factory);
+
+      expect(result.length).toBe(3);
+      expect(result[0]).toBe(a);
+      expect(result[1]).toBe(b);
+      expect(result[2]).toBe(c);
+    });
+  });
 });

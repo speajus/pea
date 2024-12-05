@@ -1,45 +1,58 @@
-name: Publish Package to npmjs
+name: Version or Publish
+
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        node-version: [22]
-    steps:
-    - uses: actions/checkout@v4
-    - name: Install pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 9
+  changesets:
+      runs-on: ubuntu-22.04
+      strategy:
+          matrix:
+            node-version: [22]
+      steps:
+          - name: Checkout Repo
+            uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'pnpm'
+          - name: Use Node.js 22
+            uses: actions/setup-node@v4
+            with:
+              node-version: 22.x
 
-    - name: Install dependencies
-      run: pnpm install
+          - name: Install pnpm
+            uses: pnpm/action-setup@v4
+            with:
+                version: 9
 
-    - name: Lint
-      run: pnpm run -r lint:check
+          - name: Use Node.js ${{ matrix.node-version }}
+            uses: actions/setup-node@v4
+            with:
+                node-version: ${{ matrix.node-version }}
+                cache: 'pnpm'
 
-    - name: Test
-      run: pnpm run -r test
+          - name: Install dependencies
+            run: pnpm install
 
-    - name: Build
-      run: pnpm run -r build
+          - name: Lint
+            run: pnpm run -r lint:check
 
-    - name: Create and publish versions
-      uses: changesets/action@v1
-      with:
-        version: pnpm ci:version
-        commit: "chore: update versions"
-        title: "chore: update versions"
-        publish: pnpm ci:publish
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          - name: Test
+            run: pnpm run -r test
+
+          - name: Build
+            run: pnpm run -r build
+
+          - name: Create and publish versions
+            uses: changesets/action@v1
+            with:
+              version: pnpm ci:version
+              commit: "chore: update versions"
+              title: "chore: update versions"
+              publish: pnpm ci:publish
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+ 

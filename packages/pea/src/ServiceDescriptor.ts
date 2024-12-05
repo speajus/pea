@@ -9,6 +9,7 @@ import type {
   Fn,
   OfA,
   PeaKey,
+  PeaKeyType,
   RegistryType,
   ValueOf,
 } from "./types";
@@ -60,6 +61,7 @@ export class ServiceDescriptor<
   public primitive?: boolean;
   public invalid = false;
   public optional = true;
+  public tags: PeaKeyType<T>[] = [];
 
   constructor(
     key: PeaKey<TRegistry>,
@@ -164,6 +166,11 @@ export class ServiceDescriptor<
     this.invalidate();
     return this;
   }
+  withTags(...tags: PeaKeyType<any>[]) {
+    this.tags = tags;
+    return this;
+  }
+
   hasDependency(key: CKey) {
     return this.dependencies?.has(key) ?? false;
   }
