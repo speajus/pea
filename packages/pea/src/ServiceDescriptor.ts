@@ -20,13 +20,13 @@ type EmptyTuple = typeof EMPTY;
 type Args<T> = T extends Constructor
   ? ConstructorParameters<T>
   : T extends Fn
-    ? Parameters<T>
-    : EmptyTuple;
+  ? Parameters<T>
+  : EmptyTuple;
 type Returns<T> = T extends Constructor
   ? InstanceType<T>
   : T extends Fn
-    ? ReturnType<T>
-    : T;
+  ? ReturnType<T>
+  : T;
 
 export class ServiceDescriptor<
   TRegistry extends RegistryType,
@@ -61,7 +61,7 @@ export class ServiceDescriptor<
   public primitive?: boolean;
   public invalid = false;
   public optional = true;
-  public tags: PeaKeyType<TRegistry>[] = [];
+  public tags: PeaKeyType<T>[] = [];
 
   constructor(
     key: PeaKey<TRegistry>,

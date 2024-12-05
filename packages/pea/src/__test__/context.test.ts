@@ -17,13 +17,13 @@ const abSymbol = Symbol("b");
 const acSymbol = Symbol("c");
 class A {
   static readonly [serviceSymbol] = aiSymbol;
-  constructor(readonly connectionUrl: string) {}
+  constructor(readonly connectionUrl: string) { }
   connection() {
     return this.connectionUrl;
   }
 }
 class C {
-  constructor(readonly a = pea(aiSymbol)) {}
+  constructor(readonly a = pea(aiSymbol)) { }
 }
 type AI = InstanceType<typeof A>;
 declare module "@speajus/pea" {
@@ -66,7 +66,7 @@ describe("context", () => {
   });
 
   it("should instatiate classes that", () => {
-    class B {}
+    class B { }
     const resp = ctx.resolve(B);
     expect(ctx.resolve(B)).toBeInstanceOf(B);
   });
@@ -116,7 +116,7 @@ describe("context", () => {
         return this.constructor.name;
       }
     }
-    class TA extends Base {}
+    class TA extends Base { }
     class TB extends Base {
       constructor(readonly a = pea(TA)) {
         super();
@@ -133,7 +133,7 @@ describe("context", () => {
         readonly a = pea(TA),
         readonly b = pea(TB),
         readonly c = pea(TC),
-      ) {}
+      ) { }
       toString() {
         return [this.a, this.b, this.c].join("-");
       }
@@ -244,7 +244,7 @@ describe("context", () => {
       constructor(
         readonly a: number,
         public b = pea(pkey),
-      ) {}
+      ) { }
     }
     ctx.register(pkey, () => "test");
     const result = ctx.resolve(TestA, 2);
@@ -258,7 +258,7 @@ describe("context", () => {
         public b: string,
         public c: string,
         public d: string,
-      ) {}
+      ) { }
     }
     const result = ctx.resolve(TestAlot, 2, "b", "c", "d");
     expect(result.a == 2).toBe(true);
@@ -327,7 +327,8 @@ describe("proxy", () => {
       const a = ctx.register(PA).withTags(key).proxy;
       const b = ctx.register(PB).withTags(key).proxy;
       const sd = ctx.register(PC);
-      const result = ctx.listOf(key);
+      //expect this to be nicely typed based on the PeaKeyType.
+      const result: (PA | PB)[] = ctx.listOf(key);
       expect(result.length).toBe(2);
       expect(result[0]).toBe(a);
       expect(result[1]).toBe(b);

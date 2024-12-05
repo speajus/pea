@@ -34,11 +34,10 @@ export interface Context<TRegistry extends RegistryType = Registry> {
   ): void;
 }
 export class Context<TRegistry extends RegistryType = Registry>
-  implements Context<TRegistry>
-{
+  implements Context<TRegistry> {
   //this thing is used to keep track of dependencies.
   protected map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
-  constructor(private readonly parent?: Context<any>) {}
+  constructor(private readonly parent?: Context<any>) { }
   pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
   pea(service: unknown): unknown {
     return (this.get(keyOf(service as any)) ?? this.register(service as any))
@@ -220,13 +219,19 @@ export class Context<TRegistry extends RegistryType = Registry>
    * of service.   tags should be PeaKeyType that are used to tag services.  Note this returns a proxy.  So it should
    * recall if a dependent value changes.
    *
+   * The performance currently should be not great, but all we really need is a mechanism to only invalidate the list 
+   * when a dependency changes.  This is a future optimization.  That should make it very fast.   So far I have been
+   * hesitant to add 'events' to the system, however this is a good way to do it.
+   * 
+   * 
+   *
    * @param service
    * @returns
    */
   listOf<T extends PeaKey<TRegistry>>(
     service: T,
   ): Array<ValueOf<TRegistry, T>> {
-    return this.register(peaKey(String(service)), () =>
+    return this.register(isPeaKey(service) ? service : peaKey(String(service)), () =>
       Array.from(this._listOf(service)),
     ).withCacheable(false).proxy as any;
   }
