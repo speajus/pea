@@ -1,4 +1,15 @@
 # Getting Started with Pea
+## Installation
+Install like any other npm package:
+```bash
+$ npm install @speajus/pea
+```
+```bash
+$ pnpm install @speajus/pea
+```
+```bash
+$ yarn install @speajus/pea
+```
 
 ## Basic Concepts
 
