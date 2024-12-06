@@ -1,7 +1,7 @@
 packages:
   - 'packages/*'
   - 'examples/*'
-
+  - 'speajus.github.io'
 # Define a catalog of version ranges.
 catalog:
   "@types/node": ^22.9.0
