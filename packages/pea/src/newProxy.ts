@@ -1,8 +1,17 @@
-import { nullableSymbol, PeaError } from "./guards";
+import { has, hasA, nullableSymbol, PeaError } from "./guards";
 import { ServiceDescriptor } from "./ServiceDescriptor";
+import { peaKey } from "./symbols";
 import type { Constructor } from "./types";
 
 export const proxyKey = Symbol("@pea/proxy-key");
+export const serviceKey = peaKey<ServiceDescriptor<any, any>>("@pea/service-key");
+
+export function service(v:unknown){
+  if (hasA(v, serviceKey, (v)=>v instanceof ServiceDescriptor)) {
+    return v[serviceKey];
+  }
+  throw new PeaError(`invalid service`);
+}
 
 export function newProxy<T extends Constructor>(
   key: unknown,
@@ -12,6 +21,9 @@ export function newProxy<T extends Constructor>(
     get(_target, prop) {
       if (prop === proxyKey) {
         return key;
+      }
+      if (prop === serviceKey) {
+        return service;
       }
       const val = service.invoke();
       if (prop === nullableSymbol) {
