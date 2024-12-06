@@ -13,7 +13,13 @@
     * [Async Context](async.md)
     * [Environment Variables](env.md)
     * [Path Of](path-of.md)
+* Plugins
+    * [Metrics](metrics.md)
+    * 🚧 [Drizzle](drizzle.md)
+    * 🚧 [Express](express.md)
+    * 🚧 [Authjs](authjs.md)    
 * [Caveats](caveats.md)
 * [Testing](testing.md)
 * [Examples](https://github.com/speajus/pea/tree/main/examples)
+* [Ideas](ideas.md)
 * [License](license.md)

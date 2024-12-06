@@ -4,12 +4,13 @@ import { Context } from "./context";
 import { ServiceDescriptor } from "./ServiceDescriptor";
 import { keyOf } from "./util";
 import { PeaKey } from "./types";
+import { peaKey } from "./symbols";
 
 //borrowed from https://eytanmanor.medium.com/should-you-use-asynclocalstorage-2063854356bb
 const asyncLocalStorage = new AsyncLocalStorage<
   Map<PeaKey<any>, ServiceDescriptor<any, any>>
 >();
-const serviceProxySymbol = Symbol("@pea/ServiceDescriptorProxy");
+const serviceProxySymbol = peaKey<Symbol>("@pea/ServiceDescriptorProxy");
 
 /**
  * Scoping allows for a variable to be scoped to a specific context.  This is
@@ -30,14 +31,17 @@ const scoped: Context["scoped"] = function (this: Context, key) {
       `key ${String(key)} already registered as '${String(serviceDesc[serviceProxySymbol])}', can not register a key into more than one scope`,
     );
   }
-  if (has(serviceDesc.invoke, asyncLocalSymbol)) {
+  if (has(serviceDesc, asyncLocalSymbol)) {
     throw new PeaError(
       `key ${String(key)} already registered as async scoped, can not register a key into more than one scope`,
     );
   }
-  serviceDesc.invoke = () => getServiceDescription(key).invoke();
+
+  serviceDesc.withInterceptors(() => {
+    return getServiceDescription(key).invoke();
+  });
   //@ts-expect-error - this allows to check if the invoke function is async scoped.
-  serviceDesc.invoke[asyncLocalSymbol] = key;
+  serviceDesc[asyncLocalSymbol] = key;
 
   return (next: () => void, ...[service, ...args]) => {
     const map = asyncLocalStorage.getStore() ?? new Map();

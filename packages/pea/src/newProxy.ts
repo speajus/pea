@@ -1,8 +1,9 @@
-import { nullableSymbol, PeaError } from "./guards";
+import { hasA, nullableSymbol } from "./guards";
 import { ServiceDescriptor } from "./ServiceDescriptor";
-import type { Constructor } from "./types";
+import type { Constructor, Fn } from "./types";
 
 export const proxyKey = Symbol("@pea/proxy-key");
+export const serviceDescriptorKey = Symbol("@pea/service-descriptor");
 
 export function newProxy<T extends Constructor>(
   key: unknown,
@@ -12,6 +13,9 @@ export function newProxy<T extends Constructor>(
     get(_target, prop) {
       if (prop === proxyKey) {
         return key;
+      }
+      if (prop === serviceDescriptorKey) {
+        return service;
       }
       const val = service.invoke();
       if (prop === nullableSymbol) {
@@ -77,19 +81,14 @@ export function newProxy<T extends Constructor>(
     },
   });
 }
-const proxyable = (value: any) => {
-  switch (typeof value) {
-    case "string":
-      return [true, new String(value)] as const;
-    case "number":
-      return [true, new Number(value)] as const;
-    case "boolean":
-      return [true, new Boolean(value)] as const;
-    case "symbol":
-      throw new PeaError(`symbol not supported`);
-    case "bigint":
-      throw new PeaError(`bigint not supported`);
-    default:
-      return [false, value] as const;
+
+function isServiceDescriptor<T extends Fn | Constructor | unknown>(v: unknown): v is ServiceDescriptor<any, T> {
+  return v instanceof ServiceDescriptor;
+}
+
+export const serviceDesciptor = <T extends Fn | Constructor | unknown>(v: T): ServiceDescriptor<any, T> | undefined => {
+  if (hasA(v, serviceDescriptorKey, isServiceDescriptor)) {
+    return v[serviceDescriptorKey] as any;
   }
-};
+  return;
+}
