@@ -46,6 +46,7 @@ Let's look at a real-world example using Express and Auth.js. You can find the c
 import { context, pea } from "@speajus/pea";
 import "@speajus/pea/async";
 import { sessionPeaKey } from "./pea";
+import {getSession} from "@authjs/express";
 
 // Create scoped handler for session
 const requestScoped = context.scoped(sessionPeaKey);

@@ -17,13 +17,13 @@ const abSymbol = Symbol("b");
 const acSymbol = Symbol("c");
 class A {
   static readonly [serviceSymbol] = aiSymbol;
-  constructor(readonly connectionUrl: string) {}
+  constructor(readonly connectionUrl: string) { }
   connection() {
     return this.connectionUrl;
   }
 }
 class C {
-  constructor(readonly a = pea(aiSymbol)) {}
+  constructor(readonly a = pea(aiSymbol)) { }
 }
 type AI = InstanceType<typeof A>;
 declare module "@speajus/pea" {
@@ -66,7 +66,7 @@ describe("context", () => {
   });
 
   it("should instatiate classes that", () => {
-    class B {}
+    class B { }
     const resp = ctx.resolve(B);
     expect(ctx.resolve(B)).toBeInstanceOf(B);
   });
@@ -116,7 +116,7 @@ describe("context", () => {
         return this.constructor.name;
       }
     }
-    class TA extends Base {}
+    class TA extends Base { }
     class TB extends Base {
       constructor(readonly a = pea(TA)) {
         super();
@@ -133,7 +133,7 @@ describe("context", () => {
         readonly a = pea(TA),
         readonly b = pea(TB),
         readonly c = pea(TC),
-      ) {}
+      ) { }
       toString() {
         return [this.a, this.b, this.c].join("-");
       }
@@ -244,7 +244,7 @@ describe("context", () => {
       constructor(
         readonly a: number,
         public b = pea(pkey),
-      ) {}
+      ) { }
     }
     ctx.register(pkey, () => "test");
     const result = ctx.resolve(TestA, 2);
@@ -258,7 +258,7 @@ describe("context", () => {
         public b: string,
         public c: string,
         public d: string,
-      ) {}
+      ) { }
     }
     const result = ctx.resolve(TestAlot, 2, "b", "c", "d");
     expect(result.a == 2).toBe(true);
@@ -373,5 +373,30 @@ describe("proxy", () => {
       expect(result[1]).toBe(b);
       expect(result[2]).toBe(c);
     });
+  });
+  describe("withInterceptors", () => {
+    it("should work with interceptors", () => {
+      const ctx = createNewContext();
+      const factory = () => ({ a: 1 });
+      const a = ctx.register(peaKey<{ a: number }>("test-factory-a"), factory);
+      let i = 0;
+      let b = 0;
+      a.withInterceptors((invoke) => {
+        i++;
+        return invoke();
+      });
+      expect(a.invoke().a).toBe(1);
+      expect(i).toBe(1);
+
+      a.withInterceptors((invoke) => {
+        b++;
+        return invoke();
+      });
+      expect(a.invoke().a).toBe(1);
+      expect(i).toBe(2);
+
+      expect(b).toBe(1);
+
+    })
   });
 });

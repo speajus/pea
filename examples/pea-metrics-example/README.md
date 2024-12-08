@@ -33,8 +33,10 @@ $ pnpm run prometheus
 ```
 ### Run the example package
 ```sh
-$ pnpm run example
+$ pnpm run start
 ```
 
 ### Open the prometheus dashboard
-You should be able to see the published metrics at [http://localhost:9090](http://localhost:9090)
+You can view the [http://localhost:3000](http://localhost:3000) to see what endpoints are published.
+
+You should be able to see the published metrics at [http://localhost:9090](http://localhost:9090).

@@ -6,6 +6,7 @@ export class MetricsConfig {
     constructor(
         private _port = env("METRICS_PORT", "9100"),
         public path = env("METRICS_PATH", "/metrics"),
+        public host = env("METRICS_HOST", "localhost"),
         public prefix = env("METRICS_PREFIX", "pea_"),
         /**
          * Timeout for 

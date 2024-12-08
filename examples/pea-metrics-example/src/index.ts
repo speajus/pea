@@ -1,12 +1,9 @@
-import { register } from '@speajus/pea-metrics';
-import { pea } from '@speajus/pea';
-register();
+import { peaKey, context } from '@speajus/pea';
 
-async function main(metric = pea(() => {
-    console.log('I was called')
+export const metricKey = peaKey<number>("mymetric");
+context.register(metricKey, () => {
     return 1;
-})) {
-}
+});
 
-main().catch(e => console.error(e));
+
 

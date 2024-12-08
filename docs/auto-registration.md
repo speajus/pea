@@ -1,7 +1,7 @@
 
 # Auto Registration
 
-Pea provides automatic registration capabilities for both constructors and factories, making dependency management more convenient and reducing boilerplate code.
+`Pea` provides automatic registration capabilities for both constructors and factories, making dependency management more convenient and reducing boilerplate code.
 
 ## Constructor Auto Registration
 

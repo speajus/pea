@@ -5,7 +5,7 @@
   "description": "A simple example on how to use @speajus/pea-metrics in your app",
   "scripts": {
     "prometheus": "docker run -p 9090:9090 -v ./prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus",
-    "example": "tsx ./src/index.ts"
+    "start": "tsx ./server.ts"
   },
   "keywords": [
     "prometheus",
@@ -16,10 +16,13 @@
   "author": "Justin Spears <speajus@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@speajus/pea": "file:../../packages/pea",
-    "@speajus/pea-metric": "file:../../packages/pea-metric"
+    "@speajus/pea": "link:../../packages/pea",
+    "@speajus/pea-metrics": "link:../../packages/pea-metrics",
+    "express": "^4.21.2"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.0",
     "tsx": "^4.19.2"
   }
 }

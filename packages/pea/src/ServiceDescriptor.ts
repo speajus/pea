@@ -1,8 +1,8 @@
 import { keyOf } from "./util";
-import { has, isConstructor, isFn, isPrimitive, PeaError } from "./guards";
+import { has, isConstructor, isFn, isPrimitive, isSymbol, PeaError } from "./guards";
 import { newProxy, proxyKey } from "./newProxy";
 import type { Registry } from "./registry";
-import { serviceSymbol } from "./symbols";
+import { isPeaKey, peaKeyName, serviceSymbol } from "./symbols";
 import type {
   CKey,
   Constructor,
@@ -58,12 +58,12 @@ export class ServiceDescriptor<
   private _args: Args<T> = [] as any;
   private _proxy?: Returns<T>;
   private _factory = false;
-  private interceptors?: InterceptFn<TRegistry, Returns<T>>[];
+  private interceptors?: InterceptFn<Returns<T>>[];
   public primitive?: boolean;
   public invalid = false;
   public optional = true;
   public tags: PeaKeyType<T>[] = [];
-
+  private _name: string | undefined;
   constructor(
     key: PeaKey<TRegistry>,
     service: T | undefined = undefined,
@@ -80,6 +80,24 @@ export class ServiceDescriptor<
       this.invoked = false;
     }
     this.service = service;
+  }
+
+  get name() {
+    if (this._name)
+      return this._name;
+
+    if (isSymbol(this[serviceSymbol])) {
+      this._name = isPeaKey(this[serviceSymbol]) ? peaKeyName(this[serviceSymbol]) : this[serviceSymbol].description;
+    } else if (isFn(this[serviceSymbol])) {
+      if (this[serviceSymbol].name) {
+        this._name = this[serviceSymbol].name;
+      }
+    }
+    return this._name || '<anonymous>';
+  }
+
+  set name(name: string | undefined) {
+    this._name = name;
   }
 
   get proxy(): Returns<T> {
@@ -230,8 +248,12 @@ export class ServiceDescriptor<
    * @param interceptors 
    * @returns 
    */
-  withInterceptors(...interceptors: InterceptFn<TRegistry, T>[]) {
-    this.interceptors = [...this.interceptors ?? [], ...interceptors] as any;
+  withInterceptors(...interceptors: InterceptFn<Returns<T>>[]) {
+    this.interceptors = [...this.interceptors ?? [], ...interceptors];
+    return this;
+  }
+  withName(name: string) {
+    this._name = name;
     return this;
   }
   /**
@@ -268,15 +290,14 @@ export class ServiceDescriptor<
    * 
    * @returns 
    */
-  invoke = <I extends Returns<T>>(): I => {
-    let invoke = this._invoke;
-
+  invoke = (): Returns<T> => {
     if (this.interceptors?.length) {
-      for (const interceptor of this.interceptors) {
-        invoke = () => interceptor.call(this, invoke as any);
-      }
+      const invoke = this.interceptors?.reduceRight((next: () => Returns<T>, interceptor) => {
+        return () => interceptor.call(this, next)
+      }, this._invoke);
+      return invoke.call(this);
     }
-    return invoke();
+    return this._invoke();
   };
 
   _invoke = (): Returns<T> => {
@@ -316,7 +337,6 @@ export class ServiceDescriptor<
  * The interceptor function, allows you to intercept the invocation of a service.  The
  * invocation may be a previous intercpetor. 
  */
-type InterceptFn<TRegistry extends RegistryType,
-  T> = (invoke: (this: ServiceDescriptor<TRegistry, T>) => Returns<T>) => Returns<T>;
+type InterceptFn<T> = (invoke: () => T) => T;
 
 export type ServiceDescriptorListener = (...args: ServiceDescriptor<any, any>[]) => void;
