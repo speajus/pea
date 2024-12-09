@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "docsify": "^4.13.1",
     "docsify-cli": "^4.4.4"
   }
 }
