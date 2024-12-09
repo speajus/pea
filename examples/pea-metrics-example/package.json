@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "A simple example on how to use @speajus/pea-metrics in your app",
   "scripts": {
-    "prometheus": "docker run -p 9090:9090 -v ./prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus",
+    "prometheus": "docker run -p 9090:9090  -v ./prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus",
     "start": "tsx ./server.ts"
   },
   "keywords": [

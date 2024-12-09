@@ -16,7 +16,7 @@ export function register(ctx = context) {
     ctx.register(MetricsConfig);
     ctx.register(MetricService);
     ctx.register(registerKey, () => new client.Registry());
-    const metrics = ctx.resolve((config = pea(MetricsConfig), metricService = pea(MetricService)) => {
+    ctx.resolve((config = pea(MetricsConfig), metricService = pea(MetricService)) => {
         ctx.onServiceAdded((...services) => {
             const tags = config.tags;
             for (const service of services) {
@@ -30,5 +30,4 @@ export function register(ctx = context) {
             }
         });
     });
-    console.log('started ' + metrics);
 }
