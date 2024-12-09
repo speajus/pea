@@ -33,6 +33,9 @@ importers:
       '@libsql/client':
         specifier: 0.14.0
         version: 0.14.0
+      '@speajus/pea':
+        specifier: link:../../packages/pea
+        version: link:../../packages/pea
       drizzle-orm:
         specifier: ^0.37.0
         version: 0.37.0(@libsql/client@0.14.0)(@opentelemetry/api@1.9.0)
@@ -64,6 +67,9 @@ importers:
       '@libsql/client':
         specifier: 0.14.0
         version: 0.14.0
+      '@speajus/pea':
+        specifier: link:../../packages/pea
+        version: link:../../packages/pea
       '@speajus/pea-drizzle-example':
         specifier: link:../pea-drizzle-example
         version: link:../pea-drizzle-example

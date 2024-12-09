@@ -7,21 +7,21 @@ export const promClientPeaKey = peaKey<typeof client>(
   "@pea/prometheus/metrics",
 );
 
-export const aggregatorRegistryKey = peaKey<
-  InstanceType<typeof client.AggregatorRegistry<any>>
->("@pea/prometheus/aggregator");
 
 export const registerKey = peaKey<InstanceType<typeof client.Registry>>(
   "@pea/prometheus/register",
 );
+export const metricServiceKey = peaKey<InstanceType<typeof MetricService>>(
+  "@pea/prometheus/metricService",
+);
 
 export function register(ctx = context) {
-  ctx.register(promClientPeaKey, client);
-  ctx.register(MetricsConfig);
-  ctx.register(MetricService);
-  ctx.register(registerKey, () => new client.Registry());
+  const p = ctx.register(promClientPeaKey, () => client);
+  const r = ctx.register(registerKey, () => new client.Registry());
+  const c = ctx.register(MetricsConfig);
+  const m = ctx.register(metricServiceKey, MetricService, c.proxy, p.proxy, r.proxy);
   ctx.resolve(
-    (config = pea(MetricsConfig), metricService = pea(MetricService)) => {
+    (config: MetricsConfig, metricService: MetricService) => {
       ctx.onServiceAdded((...services) => {
         const tags = config.tags;
         for (const service of services) {
@@ -34,6 +34,6 @@ export function register(ctx = context) {
           }
         }
       });
-    },
+    }, c.proxy, m.proxy,
   );
 }

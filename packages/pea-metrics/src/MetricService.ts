@@ -2,13 +2,6 @@ import { pea } from "@speajus/pea";
 import { MetricsConfig } from "./MetricsConfig";
 import { promClientPeaKey, registerKey } from "./pea";
 import { ServiceDescriptor } from "@speajus/pea/ServiceDescriptor";
-import * as promClient from "prom-client";
-
-type Metric =
-  | InstanceType<typeof promClient.Gauge>
-  | InstanceType<typeof promClient.Counter>
-  | InstanceType<typeof promClient.Summary>
-  | InstanceType<typeof promClient.Histogram>;
 
 export class MetricService {
   constructor(
@@ -17,13 +10,12 @@ export class MetricService {
     private register = pea(registerKey),
   ) {
     if (config.includeUp !== false) {
-      const prefix = config.collectDefaultMetrics?.prefix ?? this.config.prefix;
-      const metrics: Record<string, Metric> = {};
-      const up = (metrics.up = new promClient.Gauge({
-        name: `${prefix}up`,
+      const up = new promClient.Gauge({
+        name: config.formatName('up'),
         help: "1 = up, 0 = not up",
         registers: [this.register],
-      }));
+      });
+
       up.set(1);
     }
   }
@@ -39,7 +31,7 @@ export class MetricService {
         );
         return;
     }
-    const metric = this.newMetric(`${this.config.prefix}${name}`);
+    const metric = this.newMetric(name);
     v.withInterceptors((invoke) => {
       const endTimer = metric.startTimer();
       let status = "success";
@@ -54,7 +46,7 @@ export class MetricService {
     });
   }
   newMetric(oname: string) {
-    const name = camelToSnakeCase(oname).replace(/[^a-zA-Z0-9_:]/g, "_").replace(/__/g, "_");
+    const name = this.config.formatName(oname);
 
     const labelNames = ["status"];
     labelNames.push.apply(labelNames, Object.keys(this.config.labels));
@@ -86,9 +78,4 @@ export class MetricService {
     }
     throw new Error("metricType option must be histogram or summary");
   }
-}
-function camelToSnakeCase(str: string): string {
-  return str
-    .replace(/(.+?)([A-Z])/g, '$1_$2')
-    .toLowerCase();
 }

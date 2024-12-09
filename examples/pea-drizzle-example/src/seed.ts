@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import { eq } from "drizzle-orm";
 import { drizzlePeaKey, register } from "./pea";
-import { pea } from "@speajus/pea/context";
+import { pea } from "@speajus/pea";
 import { users as usersTable } from "./schema";
 import { fileURLToPath } from "url";
 

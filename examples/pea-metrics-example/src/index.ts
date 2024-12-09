@@ -4,6 +4,3 @@ export const metricKey = peaKey<number>("mymetric");
 context.register(metricKey, () => {
     return 1;
 });
-
-
-

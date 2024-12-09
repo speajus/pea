@@ -28,6 +28,9 @@ export class MetricsConfig {
     public pruneAgedBuckets = true,
     public buckets = [0.003, 0.03, 0.1, 0.3, 1.5, 10],
     public includeUp = true,
+    public formatName = (oname: string) => camelToSnakeCase(`${prefix}${oname}`)
+      .replace(/[^a-zA-Z0-9_:]/g, "_")
+      .replace(/__/g, "_"),
   ) { }
 
   get port() {
@@ -42,4 +45,7 @@ export class MetricsConfig {
     }
     return JSON.parse(this._labels) as Record<string, string>;
   }
+}
+function camelToSnakeCase(str: string): string {
+  return str.replace(/(.+?)([A-Z])/g, "$1_$2").toLowerCase();
 }
