@@ -28,7 +28,7 @@ export class MetricsConfig {
     public pruneAgedBuckets = true,
     public buckets = [0.003, 0.03, 0.1, 0.3, 1.5, 10],
     public includeUp = true,
-  ) {}
+  ) { }
 
   get port() {
     return Number(this._port);

@@ -39,7 +39,7 @@ export class MetricService {
         );
         return;
     }
-    const metric = this.newMetric(name);
+    const metric = this.newMetric(`${this.config.prefix}${name}`);
     v.withInterceptors((invoke) => {
       const endTimer = metric.startTimer();
       let status = "success";
@@ -54,7 +54,7 @@ export class MetricService {
     });
   }
   newMetric(oname: string) {
-    const name = oname.replace(/[^a-zA-Z0-9_:]/g, "_");
+    const name = camelToSnakeCase(oname).replace(/[^a-zA-Z0-9_:]/g, "_").replace(/__/g, "_");
 
     const labelNames = ["status"];
     labelNames.push.apply(labelNames, Object.keys(this.config.labels));
@@ -86,4 +86,9 @@ export class MetricService {
     }
     throw new Error("metricType option must be histogram or summary");
   }
+}
+function camelToSnakeCase(str: string): string {
+  return str
+    .replace(/(.+?)([A-Z])/g, '$1_$2')
+    .toLowerCase();
 }
