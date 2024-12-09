@@ -82,13 +82,17 @@ export function newProxy<T extends Constructor>(
   });
 }
 
-function isServiceDescriptor<T extends Fn | Constructor | unknown>(v: unknown): v is ServiceDescriptor<any, T> {
+function isServiceDescriptor<T extends Fn | Constructor | unknown>(
+  v: unknown,
+): v is ServiceDescriptor<any, T> {
   return v instanceof ServiceDescriptor;
 }
 
-export const serviceDesciptor = <T extends Fn | Constructor | unknown>(v: T): ServiceDescriptor<any, T> | undefined => {
+export const serviceDesciptor = <T extends Fn | Constructor | unknown>(
+  v: T,
+): ServiceDescriptor<any, T> | undefined => {
   if (hasA(v, serviceDescriptorKey, isServiceDescriptor)) {
     return v[serviceDescriptorKey] as any;
   }
   return;
-}
+};

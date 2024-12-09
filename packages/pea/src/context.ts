@@ -11,7 +11,10 @@ import type {
   ServiceArgs,
   PeaKeyType,
 } from "./types";
-import { ServiceDescriptor, ServiceDescriptorListener } from "./ServiceDescriptor";
+import {
+  ServiceDescriptor,
+  ServiceDescriptorListener,
+} from "./ServiceDescriptor";
 import { filterMap, isInherited, keyOf } from "./util";
 import { peaKey, isPeaKey } from "./symbols";
 
@@ -35,18 +38,19 @@ export interface Context<TRegistry extends RegistryType = Registry> {
   onServiceAdded(fn: ServiceDescriptorListener): () => void;
 }
 export class Context<TRegistry extends RegistryType = Registry>
-  implements Context<TRegistry> {
+  implements Context<TRegistry>
+{
   //this thing is used to keep track of dependencies.
   protected map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
   private listeners: ServiceDescriptorListener[] = [];
-  constructor(private readonly parent?: Context<any>) { }
+  constructor(private readonly parent?: Context<any>) {}
 
   public onServiceAdded(fn: ServiceDescriptorListener): () => void {
     fn(...this.map.values());
     this.listeners.push(fn);
     return () => {
-      this.listeners = this.listeners.filter(v => (v !== fn));
-    }
+      this.listeners = this.listeners.filter((v) => v !== fn);
+    };
   }
 
   pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
@@ -180,11 +184,8 @@ export class Context<TRegistry extends RegistryType = Registry>
       isFn(serv),
     );
 
-    this.map.set(
-      key,
-      newInst
-    );
-    this.listeners.forEach(fn => fn(newInst));
+    this.map.set(key, newInst);
+    this.listeners.forEach((fn) => fn(newInst));
     return newInst;
   }
 

@@ -9,10 +9,10 @@ type PathOf<
 > = TPath extends TKey
   ? T[TPath]
   : TPath extends
-  | `${infer TFirst extends TKey}.${infer TRest}`
-  | `[${infer TFirst extends TKey}]${infer TRest}`
-  ? PathOf<T[TFirst], TRest>
-  : never;
+        | `${infer TFirst extends TKey}.${infer TRest}`
+        | `[${infer TFirst extends TKey}]${infer TRest}`
+    ? PathOf<T[TFirst], TRest>
+    : never;
 
 const toPath = (path: string) => path.split(/\.|\[(.+?)\]/g).filter(Boolean);
 
@@ -40,7 +40,10 @@ export function pathOf<
     get(ctx as ValueOf<TRegistry, T>, path, defaultValue);
 }
 
-export function transform<R, T extends PeaKey<TRegistry>,
-  TRegistry extends RegistryType = Registry>(service: T, transformer: (v: ValueOf<TRegistry, T>) => R): R {
+export function transform<
+  R,
+  T extends PeaKey<TRegistry>,
+  TRegistry extends RegistryType = Registry,
+>(service: T, transformer: (v: ValueOf<TRegistry, T>) => R): R {
   return pea((ctx = pea(service)) => transformer(ctx));
 }

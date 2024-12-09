@@ -4,4 +4,4 @@ export * from "./context";
 export * from "./registry";
 export * from "./helpers";
 export * from "./types";
-export { serviceDesciptor } from './newProxy';
+export { serviceDesciptor } from "./newProxy";

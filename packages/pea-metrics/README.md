@@ -1,4 +1,3 @@
-
 # @speajus/pea-prom
 
 A Prometheus metrics extension for [@speajus/pea](https://github.com/speajus/pea), providing easy integration of Prometheus monitoring into your Pea-based applications.
@@ -31,28 +30,28 @@ Note: `prom-client` is a peer dependency and must be installed separately.
 ## Quick Start
 
 ```typescript
-import { pea, context } from '@speajus/pea';
-import { promClientPeaKey } from '@speajus/pea-prom';
+import { pea, context } from "@speajus/pea";
+import { promClientPeaKey } from "@speajus/pea-prom";
 
 // Get the Prometheus client
 const prometheus = pea(promClientPeaKey);
 
 // Create and register metrics
 const httpRequestsTotal = new prometheus.Counter({
-    name: 'http_requests_total',
-    help: 'Total number of HTTP requests',
-    labelNames: ['method', 'status']
+  name: "http_requests_total",
+  help: "Total number of HTTP requests",
+  labelNames: ["method", "status"],
 });
 
 // Use in your service
 class MetricsService {
-    constructor(private prometheus = pea(promClientPeaKey)) {
-        // Initialize metrics
-    }
+  constructor(private prometheus = pea(promClientPeaKey)) {
+    // Initialize metrics
+  }
 
-    recordRequest(method: string, status: number) {
-        httpRequestsTotal.inc({ method, status });
-    }
+  recordRequest(method: string, status: number) {
+    httpRequestsTotal.inc({ method, status });
+  }
 }
 ```
 
@@ -90,49 +89,49 @@ scrape_configs:
 ### Custom Metrics
 
 ```typescript
-import { pea } from '@speajus/pea';
-import { promClientPeaKey } from '@speajus/pea-prom';
+import { pea } from "@speajus/pea";
+import { promClientPeaKey } from "@speajus/pea-prom";
 
 class CustomMetricsService {
-    private prometheus = pea(promClientPeaKey);
-    
-    private requestDuration = new this.prometheus.Histogram({
-        name: 'http_request_duration_seconds',
-        help: 'HTTP request duration in seconds',
-        labelNames: ['method', 'route'],
-        buckets: [0.1, 0.5, 1, 2, 5]
-    });
+  private prometheus = pea(promClientPeaKey);
 
-    recordDuration(method: string, route: string, duration: number) {
-        this.requestDuration.observe({ method, route }, duration);
-    }
+  private requestDuration = new this.prometheus.Histogram({
+    name: "http_request_duration_seconds",
+    help: "HTTP request duration in seconds",
+    labelNames: ["method", "route"],
+    buckets: [0.1, 0.5, 1, 2, 5],
+  });
+
+  recordDuration(method: string, route: string, duration: number) {
+    this.requestDuration.observe({ method, route }, duration);
+  }
 }
 ```
 
 ## Express Middleware Example
 
 ```typescript
-import { pea } from '@speajus/pea';
-import { promClientPeaKey } from '@speajus/pea-prom';
-import express from 'express';
+import { pea } from "@speajus/pea";
+import { promClientPeaKey } from "@speajus/pea-prom";
+import express from "express";
 
 const app = express();
 const prometheus = pea(promClientPeaKey);
 
 // Metrics endpoint
-app.get('/metrics', async (req, res) => {
-    res.set('Content-Type', prometheus.register.contentType);
-    res.end(await prometheus.register.metrics());
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", prometheus.register.contentType);
+  res.end(await prometheus.register.metrics());
 });
 
 // Middleware to collect metrics
 app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        // Record metrics here
-    });
-    next();
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    // Record metrics here
+  });
+  next();
 });
 ```
 

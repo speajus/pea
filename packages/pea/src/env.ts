@@ -9,7 +9,7 @@ export const Default = {
 type Env = typeof process.env;
 
 //make env easier to use.
-export interface PeaEnv extends Env { }
+export interface PeaEnv extends Env {}
 
 export const envPeaKey = peaKey<PeaEnv>("@pea/env");
 

@@ -15,7 +15,7 @@ export const peaKey = <T>(name: string): PeaKeyType<T> => {
 
 export const peaKeyName = (key: PeaKeyType<any>) => {
   return peaKeyMap.get(key);
-}
+};
 
 export function isPeaKey(v: unknown): v is PeaKeyType<unknown> {
   return isSymbol(v) ? peaKeyMap.has(v) : false;

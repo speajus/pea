@@ -1,5 +1,12 @@
 import { keyOf } from "./util";
-import { has, isConstructor, isFn, isPrimitive, isSymbol, PeaError } from "./guards";
+import {
+  has,
+  isConstructor,
+  isFn,
+  isPrimitive,
+  isSymbol,
+  PeaError,
+} from "./guards";
 import { newProxy, proxyKey } from "./newProxy";
 import type { Registry } from "./registry";
 import { isPeaKey, peaKeyName, serviceSymbol } from "./symbols";
@@ -20,13 +27,13 @@ type EmptyTuple = typeof EMPTY;
 type Args<T> = T extends Constructor
   ? ConstructorParameters<T>
   : T extends Fn
-  ? Parameters<T>
-  : EmptyTuple;
+    ? Parameters<T>
+    : EmptyTuple;
 type Returns<T> = T extends Constructor
   ? InstanceType<T>
   : T extends Fn
-  ? ReturnType<T>
-  : T;
+    ? ReturnType<T>
+    : T;
 
 export class ServiceDescriptor<
   TRegistry extends RegistryType,
@@ -83,17 +90,18 @@ export class ServiceDescriptor<
   }
 
   get name() {
-    if (this._name)
-      return this._name;
+    if (this._name) return this._name;
 
     if (isSymbol(this[serviceSymbol])) {
-      this._name = isPeaKey(this[serviceSymbol]) ? peaKeyName(this[serviceSymbol]) : this[serviceSymbol].description;
+      this._name = isPeaKey(this[serviceSymbol])
+        ? peaKeyName(this[serviceSymbol])
+        : this[serviceSymbol].description;
     } else if (isFn(this[serviceSymbol])) {
       if (this[serviceSymbol].name) {
         this._name = this[serviceSymbol].name;
       }
     }
-    return this._name || '<anonymous>';
+    return this._name || "<anonymous>";
   }
 
   set name(name: string | undefined) {
@@ -161,8 +169,8 @@ export class ServiceDescriptor<
   }
   /**
    * Set the args to be used with the service.   These can be other peas, or any other value.
-   * @param args 
-   * @returns 
+   * @param args
+   * @returns
    */
   withArgs(...args: Args<T>) {
     this.args = args;
@@ -171,8 +179,8 @@ export class ServiceDescriptor<
   }
   /**
    * Change the service implementation.
-   * @param service 
-   * @returns 
+   * @param service
+   * @returns
    */
   withService(service: T) {
     this.service = service;
@@ -180,12 +188,12 @@ export class ServiceDescriptor<
     return this;
   }
   /**
-   * You can turn off response caching by setting this to false.  
+   * You can turn off response caching by setting this to false.
    * This is useful for things taht can not be cached.   Any pea depending on a non-cacheable,
    * will be not cached.
-   * 
-   * @param cacheable 
-   * @returns 
+   *
+   * @param cacheable
+   * @returns
    */
   withCacheable(cacheable?: boolean) {
     this.cacheable = cacheable ?? !this.cacheable;
@@ -198,15 +206,15 @@ export class ServiceDescriptor<
     return this;
   }
   /**
-   * Sets the service as optional.   
+   * Sets the service as optional.
    * This will not throw an error if the service is not found. The proxy however
    * will continue to exist, just any access to it will return undefined.
-   * 
+   *
    * You can use `isNullish` from the guards to check if the service if a proxy is actually
-   * nullish. 
-   * 
-   * @param optional 
-   * @returns 
+   * nullish.
+   *
+   * @param optional
+   * @returns
    */
   withOptional(optional?: boolean) {
     this.optional = optional ?? !this.optional;
@@ -214,9 +222,9 @@ export class ServiceDescriptor<
     return this;
   }
   /**
-   * This is used to set a value.  This is useful for things like constants.  This will not be invoked. 
-   * @param value 
-   * @returns 
+   * This is used to set a value.  This is useful for things like constants.  This will not be invoked.
+   * @param value
+   * @returns
    */
   withValue(value: ValueOf<TRegistry, T>) {
     this.service = value;
@@ -225,18 +233,18 @@ export class ServiceDescriptor<
     return this;
   }
   /**
-   * Tags are used to group services.  This is useful for finding all services of a certain type. 
-   * @param tags 
-   * @returns 
+   * Tags are used to group services.  This is useful for finding all services of a certain type.
+   * @param tags
+   * @returns
    */
   withTags(...tags: PeaKeyType<any>[]) {
     this.tags = tags;
     return this;
   }
   /**
-   * A description of the service.  This is useful for debugging. 
-   * @param description 
-   * @returns 
+   * A description of the service.  This is useful for debugging.
+   * @param description
+   * @returns
    */
   withDescription(description: string) {
     this.description = description;
@@ -244,12 +252,12 @@ export class ServiceDescriptor<
   }
   /**
    * Interceptors allow you to intercept the invocation of a service.  This is useful for things like logging, or
-   * metrics. 
-   * @param interceptors 
-   * @returns 
+   * metrics.
+   * @param interceptors
+   * @returns
    */
   withInterceptors(...interceptors: InterceptFn<Returns<T>>[]) {
-    this.interceptors = [...this.interceptors ?? [], ...interceptors];
+    this.interceptors = [...(this.interceptors ?? []), ...interceptors];
     return this;
   }
   withName(name: string) {
@@ -258,16 +266,16 @@ export class ServiceDescriptor<
   }
   /**
    * Check to see if the current service has a dependency.
-   * @param key 
-   * @returns 
+   * @param key
+   * @returns
    */
   hasDependency(key: CKey) {
     return this.dependencies?.has(key) ?? false;
   }
   /**
    * Add a dependency to the service.  This is used to track dependencies.
-   * @param keys 
-   * @returns 
+   * @param keys
+   * @returns
    */
   addDependency(...keys: CKey[]) {
     if (keys.length) {
@@ -287,14 +295,17 @@ export class ServiceDescriptor<
   }
   /**
    * Invokes the service and returns the value.  This is where the main resolution happens.
-   * 
-   * @returns 
+   *
+   * @returns
    */
   invoke = (): Returns<T> => {
     if (this.interceptors?.length) {
-      const invoke = this.interceptors?.reduceRight((next: () => Returns<T>, interceptor) => {
-        return () => interceptor.call(this, next)
-      }, this._invoke);
+      const invoke = this.interceptors?.reduceRight(
+        (next: () => Returns<T>, interceptor) => {
+          return () => interceptor.call(this, next);
+        },
+        this._invoke,
+      );
       return invoke.call(this);
     }
     return this._invoke();
@@ -330,13 +341,13 @@ export class ServiceDescriptor<
 
     return resp;
   };
-
-
 }
 /**
  * The interceptor function, allows you to intercept the invocation of a service.  The
- * invocation may be a previous intercpetor. 
+ * invocation may be a previous intercpetor.
  */
 type InterceptFn<T> = (invoke: () => T) => T;
 
-export type ServiceDescriptorListener = (...args: ServiceDescriptor<any, any>[]) => void;
+export type ServiceDescriptorListener = (
+  ...args: ServiceDescriptor<any, any>[]
+) => void;
