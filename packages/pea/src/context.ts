@@ -38,12 +38,11 @@ export interface Context<TRegistry extends RegistryType = Registry> {
   onServiceAdded(fn: ServiceDescriptorListener): () => void;
 }
 export class Context<TRegistry extends RegistryType = Registry>
-  implements Context<TRegistry>
-{
+  implements Context<TRegistry> {
   //this thing is used to keep track of dependencies.
   protected map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
   private listeners: ServiceDescriptorListener[] = [];
-  constructor(private readonly parent?: Context<any>) {}
+  constructor(private readonly parent?: Context<any>) { }
 
   public onServiceAdded(fn: ServiceDescriptorListener): () => void {
     fn(...this.map.values());
@@ -150,6 +149,7 @@ export class Context<TRegistry extends RegistryType = Registry>
         this.invalidate(k, v, seen);
       }
     }
+    this.listeners?.forEach((fn) => fn(ctx));
   }
   register<TKey extends PeaKey<TRegistry>>(
     tkey: TKey,
@@ -251,11 +251,12 @@ export class Context<TRegistry extends RegistryType = Registry>
       () => Array.from(this._listOf(service)),
     ).withCacheable(false);
 
-    // //any time a new item is added invalidate the list, this should allow for things to be cached.
+    //any time a new item is added invalidate the list, this should allow for things to be cached.
+    // we would also need to invalidate on tags changes.
     // this.listeners.push((v) => {
-    //   if (v !== ret) {
-    //     v.invalidate();
-    //   }
+    //   //  if (v !== ret) {
+    //   ret.invalidate();
+    //   //  }
     // })
 
     return ret.proxy as any;
