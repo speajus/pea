@@ -1,6 +1,6 @@
 # Manual Registration
 
-While Pea supports auto-registration, manual registration gives you more control over how services are created and managed. Understanding manual registration is crucial as it follows the "last registration wins" principle while maintaining singleton instances.
+While Pea supports auto-registration, manual registration provides more control over how services are created and managed. This guide covers various manual registration patterns and best practices.
 
 ## Basic Registration
 
@@ -15,11 +15,19 @@ class LoggerService {
   }
 }
 
-// Register the class
+// Register the class directly
 context.register(LoggerService);
 
 // Or register with a specific instance
-context.register(LoggerService, new LoggerService());
+//context.register(LoggerService, ()=>new LoggerService());
+
+// Use the service
+class UserService {
+  constructor(private logger:LoggerService)) {
+    this.logger.log("UserService initialized");
+  }
+}
+const userService = context.resolve(UserService, pea(LoggerService));
 ```
 
 ### Factory Registration
@@ -27,294 +35,206 @@ context.register(LoggerService, new LoggerService());
 ```typescript
 import { pea, context, peaKey } from "@speajus/pea";
 
-interface DatabaseConnection {
-  query(sql: string): Promise<any>;
-}
-
-const dbKey = peaKey<DatabaseConnection>("database");
-
-// Register using a factory function
-context.register(dbKey, (config = pea(ConfigService)) => {
-  return new PostgresConnection(config.dbUrl);
+// Define a factory function
+const createDatabase = () => ({
+  connect: async () => {
+    // Database connection logic
+  },
 });
+
+// Register using a factory
+context.register(createDatabase);
+
+// Or with a specific key
+const dbKey = peaKey<ReturnType<typeof createDatabase>>("database");
+context.register(dbKey, createDatabase);
 ```
 
-## Last Registration Wins
+## Advanced Registration
 
-Pea follows the "last registration wins" principle, where the most recent registration for a key becomes the active one:
+### Conditional Registration
 
 ```typescript
-import { pea, context, peaKey } from "@speajus/pea";
-
-interface Cache {
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string): Promise<void>;
+import { pea, context } from "@speajus/pea";
+import { env } from "@speajus/pea/env";
 }
+// Environment-based registration
+context.register(CacheService, (nodeEnv = env("NODE_ENV")) =>
+nodeEnv == "production" ? new RedisCacheService() :  new InMemoryCacheService());
 
-const cacheKey = peaKey<Cache>("cache");
-
-// First registration
-context.register(cacheKey, () => new MemoryCache());
-
-// Second registration - this one wins
-context.register(cacheKey, () => new RedisCache());
-
-// All resolutions will use RedisCache
-const cache = context.resolve(cacheKey); // Returns RedisCache instance
+// Feature flag registration
+const featureFlag = process.env.FEATURE_ENABLED === "true";
+if (featureFlag) {
+  context.register(FeatureService, new EnhancedFeatureService());
+}
 ```
 
-## Singleton Behavior
-
-Every registered service is a singleton by default. The same instance is returned for all resolutions:
+### Registration with Dependencies
 
 ```typescript
 import { pea, context } from "@speajus/pea";
 
-class UserService {
-  private counter = 0;
-  
-  increment() {
-    this.counter++;
-    return this.counter;
-  }
+class ConfigService {
+  constructor(readonly dbUrl = process.env.DATABASE_URL) {}
 }
 
-context.register(UserService);
+class DatabaseService {
+  constructor(private config: ConfigService) {}
+}
 
-// Both references point to the same instance
-const service1 = context.resolve(UserService);
-const service2 = context.resolve(UserService);
-
-service1.increment(); // Returns 1
-service2.increment(); // Returns 2 (same instance)
-
-console.log(service1 === service2); // true
+// Register with explicit dependencies
+context.register(
+  DatabaseService,
+  (config = pea(ConfigService)) => new DatabaseService(config)
+);
 ```
 
-### Factory Singletons
+## Type-Safe Registration
 
-Even factory-created instances are singletons:
-
-```typescript
-import { pea, context, peaKey } from "@speajus/pea";
-
-interface Config {
-  apiUrl: string;
-}
-
-const configKey = peaKey<Config>("config");
-
-// Factory is called only once
-context.register(configKey, () => ({
-  apiUrl: process.env.API_URL ?? "http://localhost:3000"
-}));
-
-// Both resolve to the same instance
-const config1 = context.resolve(configKey);
-const config2 = context.resolve(configKey);
-
-console.log(config1 === config2); // true
-```
-
-## Overriding Registrations
-
-### Development vs Production
-
-```typescript
-import { pea, context, peaKey } from "@speajus/pea";
-
-interface EmailService {
-  sendEmail(to: string, body: string): Promise<void>;
-}
-
-const emailKey = peaKey<EmailService>("email");
-
-// Development registration
-if (process.env.NODE_ENV === "development") {
-  context.register(emailKey, () => ({
-    sendEmail: async (to, body) => {
-      console.log(`[DEV] Email to ${to}: ${body}`);
-    }
-  }));
-}
-
-// Production registration
-if (process.env.NODE_ENV === "production") {
-  context.register(emailKey, () => new AwsSesEmailService());
-}
-```
-
-### Testing Overrides
-
-```typescript
-import { pea, context } from "@speajus/pea";
-
-describe("UserService", () => {
-  beforeEach(() => {
-    // Override for testing - last registration wins
-    context.register(DatabaseService, {
-      query: vi.fn().mockResolvedValue([])
-    });
-  });
-
-  it("should fetch users", async () => {
-    const userService = context.resolve(UserService);
-    await userService.getUsers();
-  });
-});
-```
-
-## Best Practices
-
-### 1. Centralize Registrations
-
-```typescript
-// registry.ts
-export function setupRegistry() {
-  // Core services
-  context.register(LoggerService);
-  context.register(ConfigService);
-  
-  // Feature services
-  context.register(UserService);
-  context.register(AuthService);
-  
-  // Environment-specific overrides
-  if (process.env.NODE_ENV === "production") {
-    context.register(CacheService, new RedisCacheService());
-  }
-}
-```
-
-### 2. Type Safety
+### Using PeaKey
 
 ```typescript
 import { pea, peaKey } from "@speajus/pea";
 
 interface MetricsService {
-  track(event: string, data: unknown): void;
+  track(event: string): void;
 }
 
 const metricsKey = peaKey<MetricsService>("metrics");
 
+// Type-safe registration
+context.register(metricsKey, {
+  track: (event) => console.log(event),
+});
+
+// Usage
+class AnalyticsService {
+  constructor(private metrics = pea(metricsKey)) {
+    this.metrics.track("AnalyticsService.init");
+  }
+}
+```
+
+### Module Augmentation
+
+```typescript
+import { pea, peaKey } from "@speajus/pea";
+
+const configKey = peaKey<Config>("config");
+
+// Extend Registry type
 declare module "@speajus/pea" {
   interface Registry {
-    [metricsKey]: MetricsService;
+    [configKey]: Config;
   }
 }
 
-// Type-safe registration
-context.register(metricsKey, {
-  track: (event, data) => {
-    // Implementation
-  }
+// Now registration is type-safe
+context.register(configKey, {
+  apiUrl: "https://api.example.com",
 });
 ```
 
-### 3. Explicit Dependencies
+## Registration Options
+
+### Singleton vs Factory
 
 ```typescript
 import { pea, context } from "@speajus/pea";
 
-// Good: Dependencies are clear
-context.register(ApiClient, (
-  config = pea(ConfigService),
-  logger = pea(LoggerService),
-  metrics = pea(MetricsService)
-) => {
-  return new ApiClient(config, logger, metrics);
-});
+// Singleton (default)
+context.register(UserService);
+
+// New instance per resolution
+context.register(UserService);
+
+// Cached factory (singleton after first resolution)
+context
+  .register(UserService)
+  .withCachable()
+  .withOptional()
+  .withDescription("This is the user service")
+  .withName("UserService");
 ```
+
+### Tags and Metadata
+
+```typescript
+import { pea, context } from "@speajus/pea";
+
+// Register with tags
+context.register(UserService).withTags("service", "user");
+
+// Register with metadata
+context.register(UserService).withMetadata({ version: "1.0.0" });
+```
+
+## Best Practices
+
+1. **Explicit Dependencies**: Prefer explicit registration for core services to make dependencies clear.
+
+   ```typescript
+   context.register(CoreService, pea(LoggerService), pea(ConfigService));
+   ```
+
+2. **Configuration Management**: Use manual registration for configuration objects.
+
+   ```typescript
+   context.register(ConfigKey, {
+     apiUrl: process.env.API_URL,
+     timeout: parseInt(process.env.TIMEOUT ?? "5000"),
+   });
+   ```
+
+3. **Testing**: Use manual registration to swap implementations in tests.
+
+   ```typescript
+   // In tests
+   context.register(DatabaseService, new MockDatabaseService());
+   ```
+
+4. **Lifecycle Management**: Use registration hooks for cleanup.
+   ```typescript
+   context.register(DatabaseService).onDispose(async (service) => {
+     await service.disconnect();
+   });
+   ```
 
 ## Common Patterns
 
-### Configuration Override
+### Plugin Registration
 
 ```typescript
 import { pea, context, peaKey } from "@speajus/pea";
 
-const configKey = peaKey<Config>("config");
+const pluginKey = peaKey<Plugin[]>("plugins");
 
-// Base configuration
-context.register(configKey, {
-  apiUrl: "http://api.example.com",
-  timeout: 5000
+context.register(AuthPlugin).withTag(pluginKey);
+context.register(LoggingPlugin).withTag(pluginKey);
+context.register(MetricsPlugin).withTag(pluginKey);
+
+// Access all plugins
+class PluginManager {
+  constructor(private plugins = context.listOf(pluginKey)) {
+    this.plugins.forEach((plugin) => plugin.initialize());
+  }
+}
+```
+
+### Feature Toggles
+
+```typescript
+import { pea, context, peaKey } from "@speajus/pea";
+
+interface FeatureFlag {
+  newUI: boolean;
+  beta: boolean;
+}
+const featureKey = peaKey<FeatureFlag>("features");
+
+// Register feature flags
+context.register(featureKey, {
+  newUI: process.env.ENABLE_NEW_UI === "true",
+  beta: process.env.ENABLE_BETA === "true",
 });
-
-// Override in tests
-if (process.env.NODE_ENV === "test") {
-  context.register(configKey, {
-    apiUrl: "http://localhost:3000",
-    timeout: 1000
-  });
-}
-```
-
-### Feature Flags
-
-```typescript
-import { pea, context, peaKey } from "@speajus/pea";
-
-interface FeatureService {
-  isEnabled(feature: string): boolean;
-}
-
-const featureKey = peaKey<FeatureService>("features");
-
-// Register based on environment
-context.register(featureKey, (config = pea(ConfigService)) => {
-  if (config.environment === "production") {
-    return new RemoteFeatureService();
-  }
-  return new LocalFeatureService();
-});
-```
-
-### Options
-When manually registering a service you have several options you can specify.
-
-### Cacheable
-You can disable caching for a service by using the `withCacheable` method. When
-caching is disabled each time the service is resolved it will be resolved again.
-
-```typescript
-import { pea, context, peaKey } from "@speajus/pea";
-
-class Random {
-  value: number;
-  constructor(private readonly max = 100}){
-    this.value = Math.floor(Math.random() * this.max)
-  }
-}
-
-context.register(Random).withCacheable(false)
-```
-
-### Args
-You can change the resolved args of a service by using the `withArgs` method.
-
-```typescript
-import { pea, context, peaKey } from "@speajus/pea";
-
-class Random {
-  value: number;
-  constructor(private readonly max = 100}){
-    this.value = Math.floor(Math.random() * this.max)
-  }
-}
-
-context.register(Random).withArgs(1000)
-```
-
-### With Value
-You can set a value by using `withValue`.  This
-will not be invoked.
-
-```typescript
-import { pea, context, peaKey } from "@speajus/pea";
-
-const numKey = peaKey<number>("num")
-
-context.register(numKey).withValue(1000);
-
 ```
