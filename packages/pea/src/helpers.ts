@@ -39,3 +39,11 @@ export function pathOf<
   return (ctx = pea(service)) =>
     get(ctx as ValueOf<TRegistry, T>, path, defaultValue);
 }
+
+export function transform<
+  R,
+  T extends PeaKey<TRegistry>,
+  TRegistry extends RegistryType = Registry,
+>(service: T, transformer: (v: ValueOf<TRegistry, T>) => R): R {
+  return pea((ctx = pea(service)) => transformer(ctx));
+}

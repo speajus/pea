@@ -1,5 +1,5 @@
-import { isSymbol } from "./guards";
-import { PeaKeyType } from "./types";
+import { isConstructor, isFn, isSymbol } from "./guards";
+import { PeaKey, PeaKeyType } from "./types";
 
 export const serviceSymbol = Symbol("@pea/Service");
 export const destroySymbol = Symbol("@pea/Service.destroy");
@@ -13,9 +13,19 @@ export const peaKey = <T>(name: string): PeaKeyType<T> => {
   return sym as any;
 };
 
-export const peaKeyName = (key: PeaKeyType<any>) =>
-  peaKeyMap.get(key) ?? "<symbol>";
+export const peaKeyName = (key: PeaKeyType<any>) => {
+  return peaKeyMap.get(key);
+};
 
-export function isPeaKey(v: unknown): v is symbol {
-  return isSymbol(v) && peaKeyMap.has(v);
+export function isPeaKey(v: unknown): v is PeaKeyType<unknown> {
+  return isSymbol(v) ? peaKeyMap.has(v) : false;
+}
+export function asString(key: PeaKey<any>) {
+  if (isPeaKey(key)) {
+    return peaKeyName(key);
+  }
+  if (isFn(key)) {
+    return key.name ?? "<anonymous>";
+  }
+  return String(key);
 }

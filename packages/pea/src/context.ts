@@ -11,7 +11,10 @@ import type {
   ServiceArgs,
   PeaKeyType,
 } from "./types";
-import { ServiceDescriptor } from "./ServiceDescriptor";
+import {
+  ServiceDescriptor,
+  ServiceDescriptorListener,
+} from "./ServiceDescriptor";
 import { filterMap, isInherited, keyOf } from "./util";
 import { peaKey, isPeaKey } from "./symbols";
 
@@ -32,13 +35,24 @@ export interface Context<TRegistry extends RegistryType = Registry> {
     service: T,
     fn: VisitFn<TRegistry, T>,
   ): void;
+  onServiceAdded(fn: ServiceDescriptorListener): () => void;
 }
 export class Context<TRegistry extends RegistryType = Registry>
   implements Context<TRegistry>
 {
   //this thing is used to keep track of dependencies.
   protected map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
+  private listeners: ServiceDescriptorListener[] = [];
   constructor(private readonly parent?: Context<any>) {}
+
+  public onServiceAdded(fn: ServiceDescriptorListener): () => void {
+    fn(...this.map.values());
+    this.listeners.push(fn);
+    return () => {
+      this.listeners = this.listeners.filter((v) => v !== fn);
+    };
+  }
+
   pea<T extends PeaKey<TRegistry>>(service: T): ValueOf<TRegistry, T>;
   pea(service: unknown): unknown {
     return (this.get(keyOf(service as any)) ?? this.register(service as any))
@@ -136,6 +150,7 @@ export class Context<TRegistry extends RegistryType = Registry>
         this.invalidate(k, v, seen);
       }
     }
+    this.listeners?.forEach((fn) => fn(ctx));
   }
   register<TKey extends PeaKey<TRegistry>>(
     tkey: TKey,
@@ -162,17 +177,17 @@ export class Context<TRegistry extends RegistryType = Registry>
       }
       return inst;
     }
-    this.map.set(
-      key,
-      (inst = new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(
-        tkey,
-        serv as any,
-        args as any,
-        true,
-        isFn(serv),
-      )),
+    const newInst = new ServiceDescriptor<TRegistry, ValueOf<TRegistry, TKey>>(
+      tkey,
+      serv as any,
+      args as any,
+      true,
+      isFn(serv),
     );
-    return inst;
+
+    this.map.set(key, newInst);
+    this.listeners.forEach((fn) => fn(newInst));
+    return newInst;
   }
 
   resolve<TKey extends PeaKey<TRegistry>>(
@@ -232,10 +247,20 @@ export class Context<TRegistry extends RegistryType = Registry>
   listOf<T extends PeaKey<TRegistry>>(
     service: T,
   ): Array<ValueOf<TRegistry, T>> {
-    return this.register(
+    const ret = this.register(
       isPeaKey(service) ? service : peaKey(String(service)),
       () => Array.from(this._listOf(service)),
-    ).withCacheable(false).proxy as any;
+    ).withCacheable(false);
+
+    //any time a new item is added invalidate the list, this should allow for things to be cached.
+    // we would also need to invalidate on tags changes.
+    // this.listeners.push((v) => {
+    //   //  if (v !== ret) {
+    //   ret.invalidate();
+    //   //  }
+    // })
+
+    return ret.proxy as any;
   }
 }
 

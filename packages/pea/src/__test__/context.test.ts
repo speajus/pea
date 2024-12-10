@@ -374,4 +374,28 @@ describe("proxy", () => {
       expect(result[2]).toBe(c);
     });
   });
+  describe("withInterceptors", () => {
+    it("should work with interceptors", () => {
+      const ctx = createNewContext();
+      const factory = () => ({ a: 1 });
+      const a = ctx.register(peaKey<{ a: number }>("test-factory-a"), factory);
+      let i = 0;
+      let b = 0;
+      a.withInterceptors((invoke) => {
+        i++;
+        return invoke();
+      });
+      expect(a.invoke().a).toBe(1);
+      expect(i).toBe(1);
+
+      a.withInterceptors((invoke) => {
+        b++;
+        return invoke();
+      });
+      expect(a.invoke().a).toBe(1);
+      expect(i).toBe(2);
+
+      expect(b).toBe(1);
+    });
+  });
 });

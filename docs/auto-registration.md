@@ -1,7 +1,6 @@
-
 # Auto Registration
 
-Pea provides automatic registration capabilities for both constructors and factories, making dependency management more convenient and reducing boilerplate code.
+`Pea` provides automatic registration capabilities for both constructors and factories, making dependency management more convenient and reducing boilerplate code.
 
 ## Constructor Auto Registration
 
@@ -21,7 +20,7 @@ class LoggerService {
 // No explicit registration needed
 class UserService {
   constructor(private logger = pea(LoggerService)) {}
-  
+
   createUser() {
     this.logger.log("Creating user...");
   }
@@ -30,7 +29,6 @@ class UserService {
 // LoggerService is automatically registered
 const userService = context.resolve(UserService);
 ```
-
 
 ## Factory Auto Registration
 
@@ -49,11 +47,9 @@ const dbFactory = () => {
   return {
     query: async (sql: string) => {
       // Implementation
-    }
+    },
   };
 };
-
-const dbKey = peaKey<DatabaseConnection>("database");
 
 // Factory is automatically registered
 class Repository {
@@ -69,16 +65,14 @@ Auto-registered factories can use other dependencies:
 import { pea, context } from "@speajus/pea";
 
 class ConfigService {
-  constructor(
-    readonly dbUrl = "postgres://localhost:5432"
-  ) {}
+  constructor(readonly dbUrl = "postgres://localhost:5432") {}
 }
 
 const createDatabase = (config = pea(ConfigService)) => {
   return {
     connect: async () => {
       // Use config.dbUrl
-    }
+    },
   };
 };
 
@@ -113,70 +107,13 @@ const createCache = (config = pea(ConfigService)) => {
 
 // Cache implementation is auto-selected based on environment
 class CacheService {
-  constructor(private cache = pea(cacheKey)) {}
+  constructor(private cache = pea(createCache)) {}
 }
 ```
 
 ## Scoped Auto Registration
 
-### Request-Scoped Services
-
-Auto registration works with scoped services:
-
-```typescript
-import { pea, context } from "@speajus/pea";
-import "@speajus/pea/async";
-
-class RequestContext {
-  constructor(
-    readonly userId: string,
-    readonly timestamp = Date.now()
-  ) {}
-}
-
-// Auto-registered as request-scoped
-class UserService {
-  constructor(
-    private context = pea(RequestContext),
-    private db = pea(DatabaseService)
-  ) {}
-  
-  async getCurrentUser() {
-    return this.db.findUser(this.context.userId);
-  }
-}
-
-app.use(async (req, res) => {
-  const result = await context.scoped(RequestContext)(async () => {
-    const userService = context.resolve(UserService);
-    return userService.getCurrentUser();
-  }, new RequestContext(req.userId));
-});
-```
-
-## Best Practices
-
-### 1. Explicit Types
-
-Always declare types even with auto registration:
-
-```typescript
-import { pea, peaKey } from "@speajus/pea";
-
-interface EmailService {
-  sendEmail(to: string, subject: string): Promise<void>;
-}
-
-const emailKey = peaKey<EmailService>("email");
-
-declare module "@speajus/pea" {
-  interface Registry {
-    [emailKey]: EmailService;
-  }
-}
-```
-
-### 2. Factory Return Types
+### 1. Factory Return Types
 
 Be explicit about factory return types:
 
@@ -189,7 +126,7 @@ interface Logger {
 
 const createLogger = (): Logger => {
   return {
-    log: (message) => console.log(message)
+    log: (message) => console.log(message),
   };
 };
 
@@ -199,33 +136,7 @@ class Service {
 }
 ```
 
-### 3. Dependency Organization
-
-Group related auto-registered services:
-
-```typescript
-import { pea, context } from "@speajus/pea";
-
-// Group related services in a module
-export class AuthModule {
-  static register() {
-    // Explicit registration when needed
-    context.register(AuthService);
-    context.register(TokenService);
-    // Other services auto-register
-  }
-}
-
-// Services auto-register when used
-class AuthService {
-  constructor(
-    private tokens = pea(TokenService),
-    private users = pea(UserService)
-  ) {}
-}
-```
-
-### 4. Testing Considerations
+### 3. Testing Considerations
 
 Override auto-registered services in tests:
 
@@ -236,7 +147,7 @@ describe("UserService", () => {
   beforeEach(() => {
     // Override auto-registered dependencies
     context.register(LoggerService, {
-      log: vi.fn()
+      log: vi.fn(),
     });
   });
 
@@ -249,9 +160,9 @@ describe("UserService", () => {
 
 ## Limitations
 
-### 1. Circular Dependencies
+### Circular Dependencies
 
-Auto registration doesn't prevent circular dependencies:
+Auto registration doesn't prevent circular dependencies, but does try to resolve them:
 
 ```typescript
 // ❌ Bad: Circular dependency with auto registration
@@ -268,43 +179,3 @@ class ServiceA {
   constructor(private events = pea(EventBus)) {}
 }
 ```
-
-### 2. Initialization Order
-
-Be careful with initialization order in auto-registered services:
-
-```typescript
-// ❌ Bad: Undefined initialization order
-class Database {
-  constructor() {
-    // Initialization that depends on config
-  }
-}
-
-// ✅ Good: Explicit initialization
-const createDatabase = (config = pea(ConfigService)) => {
-  return new Database(config);
-};
-```
-
-### 3. Configuration
-
-Some services might need explicit configuration:
-
-```typescript
-// ❌ Bad: Missing configuration
-class ApiClient {
-  constructor() {
-    // No way to configure base URL
-  }
-}
-
-// ✅ Good: Factory with configuration
-const createApiClient = (config = pea(ConfigService)) => {
-  return new ApiClient(config.apiUrl);
-};
-```
-```
-</augment_code_snippet>
-
-This documentation covers auto registration features in Pea, including both constructor and factory auto registration, with best practices, examples, and common pitfalls to avoid. The examples demonstrate practical usage patterns while maintaining type safety and proper dependency management.

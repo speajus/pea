@@ -8,9 +8,11 @@
     "examples/*"
   ],
   "scripts": {
-    "test": "npm run test --workspace=@speajus/pea",
-    "prettier": "npm run prettier --workspace=@speajus/pea ",
-    "prettier:check": "npm run prettier:check --workspace=@speajus/pea",
+    "test": "pnpm run -r test",
+    "lint": "pnpm run -r lint",
+    "clean": "pnpm run -r clean",
+    "build": "pnpm run -r build",
+    "lint:check": "pnpm run -r lint:check",
     "ci:publish": "pnpm publish -r"
   },
   "dependencies": {
