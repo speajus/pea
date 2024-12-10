@@ -11,7 +11,7 @@ export class MetricService {
   ) {
     if (config.includeUp !== false) {
       const up = new promClient.Gauge({
-        name: config.formatName('up'),
+        name: config.formatName("up"),
         help: "1 = up, 0 = not up",
         registers: [this.register],
       });

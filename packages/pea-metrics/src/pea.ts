@@ -7,7 +7,6 @@ export const promClientPeaKey = peaKey<typeof client>(
   "@pea/prometheus/metrics",
 );
 
-
 export const registerKey = peaKey<InstanceType<typeof client.Registry>>(
   "@pea/prometheus/register",
 );
@@ -19,7 +18,13 @@ export function register(ctx = context) {
   const p = ctx.register(promClientPeaKey, () => client);
   const r = ctx.register(registerKey, () => new client.Registry());
   const c = ctx.register(MetricsConfig);
-  const m = ctx.register(metricServiceKey, MetricService, c.proxy, p.proxy, r.proxy);
+  const m = ctx.register(
+    metricServiceKey,
+    MetricService,
+    c.proxy,
+    p.proxy,
+    r.proxy,
+  );
   ctx.resolve(
     (config: MetricsConfig, metricService: MetricService) => {
       ctx.onServiceAdded((...services) => {
@@ -34,6 +39,8 @@ export function register(ctx = context) {
           }
         }
       });
-    }, c.proxy, m.proxy,
+    },
+    c.proxy,
+    m.proxy,
   );
 }

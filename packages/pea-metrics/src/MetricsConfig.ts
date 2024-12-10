@@ -28,10 +28,11 @@ export class MetricsConfig {
     public pruneAgedBuckets = true,
     public buckets = [0.003, 0.03, 0.1, 0.3, 1.5, 10],
     public includeUp = true,
-    public formatName = (oname: string) => camelToSnakeCase(`${prefix}${oname}`)
-      .replace(/[^a-zA-Z0-9_:]/g, "_")
-      .replace(/__/g, "_"),
-  ) { }
+    public formatName = (oname: string) =>
+      camelToSnakeCase(`${prefix}${oname}`)
+        .replace(/[^a-zA-Z0-9_:]/g, "_")
+        .replace(/__/g, "_"),
+  ) {}
 
   get port() {
     return Number(this._port);
