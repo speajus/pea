@@ -27,8 +27,8 @@
     "@auth/drizzle-adapter": "^1.7.4",
     "@auth/express": "^0.8.4",
     "@libsql/client": "0.14.0",
-    "@speajus/pea": "link:../../packages/pea",
-    "@speajus/pea-drizzle-example": "link:../pea-drizzle-example",
+    "@speajus/pea": "workspace:*",
+    "@speajus/pea-drizzle-example": "workspace:*",
     "@types/express": "^5.0.0",
     "drizzle-orm": "^0.37.0",
     "ejs": "^3.1.10"

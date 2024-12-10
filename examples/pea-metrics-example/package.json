@@ -19,8 +19,8 @@
   "author": "Justin Spears <speajus@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@speajus/pea": "link:../../packages/pea",
-    "@speajus/pea-metrics": "link:../../packages/pea-metrics",
+    "@speajus/pea": "workspace:*",
+    "@speajus/pea-metrics": "workspace:*",
     "express": "^4.21.2"
   },
   "devDependencies": {

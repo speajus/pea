@@ -31,7 +31,7 @@
   "dependencies": {
     "@auth/core": "^0.37.4",
     "@libsql/client": "0.14.0",
-    "@speajus/pea": "link:../../packages/pea",
+    "@speajus/pea": "workspace:*",
     "drizzle-orm": "^0.37.0"
   }
 }
