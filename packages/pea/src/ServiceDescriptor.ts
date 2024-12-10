@@ -27,13 +27,13 @@ type EmptyTuple = typeof EMPTY;
 type Args<T> = T extends Constructor
   ? ConstructorParameters<T>
   : T extends Fn
-  ? Parameters<T>
-  : EmptyTuple;
+    ? Parameters<T>
+    : EmptyTuple;
 type Returns<T> = T extends Constructor
   ? InstanceType<T>
   : T extends Fn
-  ? ReturnType<T>
-  : T;
+    ? ReturnType<T>
+    : T;
 
 export class ServiceDescriptor<
   TRegistry extends RegistryType,
@@ -81,7 +81,6 @@ export class ServiceDescriptor<
     public invokable = true,
     public description?: string,
     private onChange?: () => void,
-
   ) {
     this[serviceSymbol] = key;
     this.args = args as Args<T>;
@@ -303,7 +302,7 @@ export class ServiceDescriptor<
     this.invoked = false;
     this._instance = undefined;
     this.onChange?.();
-  }
+  };
   /**
    * Invokes the service and returns the value.  This is where the main resolution happens.
    *
