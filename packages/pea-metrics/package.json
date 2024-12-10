@@ -40,6 +40,6 @@
     "prom-client": "^15.1.3"
   },
   "dependencies": {
-    "@speajus/pea": "link:../pea"
+    "@speajus/pea": "workspace:*"
   }
 }
