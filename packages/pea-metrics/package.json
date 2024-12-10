@@ -3,8 +3,14 @@
   "version": "0.0.1",
   "description": "A @speajus/pea extension for prometheus metrics.",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./*": "./dist/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/speajus/pea.git"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
