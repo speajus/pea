@@ -27,13 +27,13 @@ type EmptyTuple = typeof EMPTY;
 type Args<T> = T extends Constructor
   ? ConstructorParameters<T>
   : T extends Fn
-    ? Parameters<T>
-    : EmptyTuple;
+  ? Parameters<T>
+  : EmptyTuple;
 type Returns<T> = T extends Constructor
   ? InstanceType<T>
   : T extends Fn
-    ? ReturnType<T>
-    : T;
+  ? ReturnType<T>
+  : T;
 
 export class ServiceDescriptor<
   TRegistry extends RegistryType,
@@ -65,10 +65,12 @@ export class ServiceDescriptor<
   private _args: Args<T> = [] as any;
   private _proxy?: Returns<T>;
   private _factory = false;
+  private _isListOf = false;
   private interceptors?: InterceptFn<Returns<T>>[];
   public primitive?: boolean;
   public invalid = false;
   public optional = true;
+
   public tags: PeaKeyType<T>[] = [];
   private _name: string | undefined;
   constructor(
@@ -78,6 +80,8 @@ export class ServiceDescriptor<
     cacheable = true,
     public invokable = true,
     public description?: string,
+    private onChange?: () => void,
+
   ) {
     this[serviceSymbol] = key;
     this.args = args as Args<T>;
@@ -270,6 +274,12 @@ export class ServiceDescriptor<
    * @returns
    */
   hasDependency(key: CKey) {
+    if (this._isListOf) {
+      if (this._cacheable && !this.invalid) {
+        return this._instance?.map(proxyKey).includes(key);
+      }
+      return this.invoke()?.map(proxyKey).includes(key);
+    }
     return this.dependencies?.has(key) ?? false;
   }
   /**
@@ -285,13 +295,14 @@ export class ServiceDescriptor<
     return this;
   }
 
-  invalidate() {
+  invalidate = () => {
     if (this.invoked === false) {
       return;
     }
     this.invalid = true;
     this.invoked = false;
     this._instance = undefined;
+    this.onChange?.();
   }
   /**
    * Invokes the service and returns the value.  This is where the main resolution happens.
@@ -341,6 +352,10 @@ export class ServiceDescriptor<
 
     return resp;
   };
+  asArray() {
+    this._isListOf = true;
+    return this;
+  }
 }
 /**
  * The interceptor function, allows you to intercept the invocation of a service.  The

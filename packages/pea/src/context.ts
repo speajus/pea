@@ -38,12 +38,11 @@ export interface Context<TRegistry extends RegistryType = Registry> {
   onServiceAdded(fn: ServiceDescriptorListener): () => void;
 }
 export class Context<TRegistry extends RegistryType = Registry>
-  implements Context<TRegistry>
-{
+  implements Context<TRegistry> {
   //this thing is used to keep track of dependencies.
   protected map = new Map<CKey, ServiceDescriptor<TRegistry, any>>();
   private listeners: ServiceDescriptorListener[] = [];
-  constructor(private readonly parent?: Context<any>) {}
+  constructor(private readonly parent?: Context<any>) { }
 
   public onServiceAdded(fn: ServiceDescriptorListener): () => void {
     fn(...this.map.values());
@@ -254,11 +253,9 @@ export class Context<TRegistry extends RegistryType = Registry>
 
     //any time a new item is added invalidate the list, this should allow for things to be cached.
     // we would also need to invalidate on tags changes.
-    // this.listeners.push((v) => {
-    //   //  if (v !== ret) {
-    //   ret.invalidate();
-    //   //  }
-    // })
+    this.listeners.push(() => {
+      ret.invalidate();
+    });
 
     return ret.proxy as any;
   }
