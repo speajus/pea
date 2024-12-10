@@ -13,6 +13,7 @@ jobs:
     permissions:
       packages: write
       contents: write
+      pull-requests: write
     strategy:
       matrix:
         node-version: [22]
