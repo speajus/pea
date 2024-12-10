@@ -9,53 +9,52 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   changesets:
-      runs-on: ubuntu-22.04
-      permissions: 
-        packages: write	
-        contents: write
-      strategy:
-          matrix:
-            node-version: [22]
-      steps:
-          - name: Checkout Repo
-            uses: actions/checkout@v4
+    runs-on: ubuntu-22.04
+    permissions:
+      packages: write
+      contents: write
+    strategy:
+      matrix:
+        node-version: [22]
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
-          - name: Use Node.js 22
-            uses: actions/setup-node@v4
-            with:
-              node-version: 22.x
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
 
-          - name: Install pnpm
-            uses: pnpm/action-setup@v4
-            with:
-                version: 9
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
-          - name: Use Node.js ${{ matrix.node-version }}
-            uses: actions/setup-node@v4
-            with:
-                node-version: ${{ matrix.node-version }}
-                cache: 'pnpm'
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
 
-          - name: Install dependencies
-            run: pnpm install
+      - name: Install dependencies
+        run: pnpm install
 
-          - name: Lint
-            run: pnpm run -r lint:check
+      - name: Lint
+        run: pnpm run -r lint:check
 
-          - name: Test
-            run: pnpm run -r test
+      - name: Test
+        run: pnpm run -r test
 
-          - name: Build
-            run: pnpm run -r build
+      - name: Build
+        run: pnpm run -r build
 
-          - name: Create and publish versions
-            uses: changesets/action@v1
-            with:
-              version: pnpm ci:version
-              commit: "chore: update versions"
-              title: "chore: update versions"
-              publish: pnpm ci:publish
-            env:
-              NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
- 
+      - name: Create and publish versions
+        uses: changesets/action@v1
+        with:
+          version: pnpm ci:version
+          commit: "chore: update versions"
+          title: "chore: update versions"
+          publish: pnpm --filter=!./examples --filter=!./docs ci:publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
