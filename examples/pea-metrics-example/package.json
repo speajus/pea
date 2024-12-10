@@ -1,7 +1,7 @@
 {
   "name": "@speajus/pea-metrics-example",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simple example on how to use @speajus/pea-metrics in your app",
   "scripts": {
     "prometheus": "docker run -p 9090:9090  -v ./prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus",

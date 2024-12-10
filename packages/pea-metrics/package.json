@@ -1,6 +1,6 @@
 {
   "name": "@speajus/pea-metrics",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A @speajus/pea extension for prometheus metrics.",
   "type": "module",
   "types": "./dist/index.d.ts",
