@@ -13,7 +13,7 @@
     "clean": "pnpm run -r clean",
     "build": "pnpm run -r build",
     "lint:check": "pnpm run -r lint:check",
-    "ci:publish": "pnpm --filter=./packages/** publish"
+    "ci:publish": "pnpm --filter=./packages/** publish --access=public"
   },
   "dependencies": {
     "@auth/express": "^0.8.4",
