@@ -13,6 +13,7 @@
     "clean": "pnpm run -r clean",
     "build": "pnpm run -r build",
     "lint:check": "pnpm run -r lint:check",
+    "ci:version": "changeset version",
     "ci:publish": "pnpm --filter=./packages/** publish --access=public"
   },
   "dependencies": {
